@@ -5,7 +5,7 @@
 ## Version:   1.0
 
 # Core module (must load first)
-Core.lua
+cfItemColors.lua
 QuestObjective.lua
 #Debug.lua
 

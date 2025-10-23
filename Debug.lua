@@ -1,4 +1,4 @@
-local addon = cfItemColorsModuleOptimized
+local addon = cfItemColors
 
 -- Performance tracking statistics
 local stats = {
