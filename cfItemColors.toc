@@ -1,0 +1,20 @@
+## Interface: 11508
+## Title:     cfItemColors
+## Notes:     Optimized item border coloring with localized APIs, caching, and throttling
+## Author:    Cowfoot
+## Version:   1.0
+
+# Core module (must load first)
+Core.lua
+QuestObjective.lua
+#Debug.lua
+
+# Domain modules
+Modules\Bags.lua
+Modules\Bank.lua
+Modules\Character.lua
+Modules\Inspect.lua
+Modules\Loot.lua
+Modules\Merchant.lua
+Modules\Professions.lua
+Modules\Quest.lua
