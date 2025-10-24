@@ -2,8 +2,7 @@ cfItemColors = {}
 local addon = cfItemColors
 
 -- Localized API calls
-local _G = _G
-local GetItemInfo = GetItemInfo
+local _GetItemInfo = GetItemInfo
 
 -- Quality color configuration
 local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
@@ -16,7 +15,7 @@ addon.EQUIPMENT_SLOTS = {
 }
 
 -- Create custom border texture for button
-local function CreateCustomBorder(button)
+local function createCustomBorder(button)
 	local customBorder = button:CreateTexture(nil, "OVERLAY")
 	customBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
 	customBorder:SetTexCoord(0.25, 0.75, 0.25, 0.75)
@@ -24,7 +23,7 @@ local function CreateCustomBorder(button)
 	customBorder:SetAlpha(0.8)
 
 	local buttonName = button:GetName()
-	local iconTexture = buttonName and _G[buttonName .. "IconTexture"]
+	local iconTexture = buttonName and _G[buttonName .. "IconTexture"]  -- _G is Lua built-in, no underscore prefix
 	customBorder:SetAllPoints(iconTexture or button)
 
 	customBorder:Hide()
@@ -32,30 +31,30 @@ local function CreateCustomBorder(button)
 end
 
 -- Clear button border and cache
-local function ClearButtonBorder(button)
+local function clearButtonBorder(button)
 	button.customBorder:Hide()
 	button.cachedItemLink = nil
 	button.cachedQuality = nil
 end
 
 -- Core quality color application logic
-local function ApplyQualityColorInternal(button, itemIdOrLink, checkQuestObjectives)
+local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjectives)
 	-- Early exit if item hasn't changed
 	if button.cachedItemLink == itemIdOrLink then return end
 
 	-- Create border if needed
 	if not button.customBorder then
-		button.customBorder = CreateCustomBorder(button)
+		button.customBorder = createCustomBorder(button)
 	end
 
 	-- Clear border if no item
 	if not itemIdOrLink then
-		ClearButtonBorder(button)
+		clearButtonBorder(button)
 		return
 	end
 
 	-- Get item info
-	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
+	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = _GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
 	-- Early exit if quality unchanged
@@ -87,10 +86,10 @@ end
 
 -- Apply quality-colored border (no quest detection)
 function addon.applyQualityColor(button, itemIdOrLink)
-	ApplyQualityColorInternal(button, itemIdOrLink, false)
+	applyQualityColorInternal(button, itemIdOrLink, false)
 end
 
 -- Apply quality-colored border with quest objective detection
 function addon.applyQualityColorWithQuestCheck(button, itemIdOrLink)
-	ApplyQualityColorInternal(button, itemIdOrLink, true)
+	applyQualityColorInternal(button, itemIdOrLink, true)
 end

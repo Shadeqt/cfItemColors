@@ -2,9 +2,8 @@ local addon = cfItemColors
 local applyQualityColor = addon.applyQualityColor
 
 -- Localized API calls
-local _G = _G
-local GetInventoryItemLink = GetInventoryItemLink
-local CreateFrame = CreateFrame
+local _GetInventoryItemLink = GetInventoryItemLink
+local _CreateFrame = CreateFrame
 
 -- Equipment slot configuration
 local EQUIPMENT_SLOTS = addon.EQUIPMENT_SLOTS
@@ -17,29 +16,29 @@ for slotId = 1, #EQUIPMENT_SLOTS do
 end
 
 -- Apply quality color to a single equipment slot
-local function UpdateSingleEquipmentSlot(slotId)
+local function updateSingleEquipmentSlot(slotId)
 	local equipmentButton = slotButtonCache[slotId]
 	if not equipmentButton then return end
 
-	local inventoryItemLink = GetInventoryItemLink("player", slotId)
+	local inventoryItemLink = _GetInventoryItemLink("player", slotId)
 	applyQualityColor(equipmentButton, inventoryItemLink)
 end
 
 -- Apply quality colors to all equipment slots
-local function UpdateAllEquipmentSlots()
-		for slotId = 1, #EQUIPMENT_SLOTS do
-		UpdateSingleEquipmentSlot(slotId)
+local function updateAllEquipmentSlots()
+	for slotId = 1, #EQUIPMENT_SLOTS do
+		updateSingleEquipmentSlot(slotId)
 	end
 end
 
 -- Listen for equipment changes
-local eventFrame = CreateFrame("Frame")
+local eventFrame = _CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function(_, event, slotId)
 	if event == "PLAYER_ENTERING_WORLD" then
-		UpdateAllEquipmentSlots()
+		updateAllEquipmentSlots()
 	elseif event == "PLAYER_EQUIPMENT_CHANGED" then
-		UpdateSingleEquipmentSlot(slotId)
+		updateSingleEquipmentSlot(slotId)
 	end
 end)

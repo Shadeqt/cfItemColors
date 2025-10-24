@@ -3,24 +3,24 @@ local applyQualityColor = addon.applyQualityColor
 local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
 
 -- Localized API calls
-local _G = _G
+local _GetNumQuestLogChoices = GetNumQuestLogChoices
+local _GetNumQuestChoices = GetNumQuestChoices
+local _GetNumQuestLogRewards = GetNumQuestLogRewards
+local _GetNumQuestRewards = GetNumQuestRewards
+local _GetQuestLogItemLink = GetQuestLogItemLink
+local _GetQuestItemLink = GetQuestItemLink
+local _GetNumQuestItems = GetNumQuestItems
+
+-- Constants
 local QuestLogFrame = QuestLogFrame
-local GetNumQuestLogChoices = GetNumQuestLogChoices
-local GetNumQuestChoices = GetNumQuestChoices
-local GetNumQuestLogRewards = GetNumQuestLogRewards
-local GetNumQuestRewards = GetNumQuestRewards
-local GetQuestLogItemLink = GetQuestLogItemLink
-local GetQuestItemLink = GetQuestItemLink
-local GetNumQuestItems = GetNumQuestItems
-local hooksecurefunc = hooksecurefunc
 
 -- Apply quality colors to quest reward buttons
-local function UpdateQuestRewardButtons(buttonNamePrefix)
+local function updateQuestRewardButtons(buttonNamePrefix)
 	local isQuestLogOpen = QuestLogFrame and QuestLogFrame:IsVisible()
 
-	local getNumChoices = isQuestLogOpen and GetNumQuestLogChoices or GetNumQuestChoices
-	local getNumRewards = isQuestLogOpen and GetNumQuestLogRewards or GetNumQuestRewards
-	local getItemLink = isQuestLogOpen and GetQuestLogItemLink or GetQuestItemLink
+	local getNumChoices = isQuestLogOpen and _GetNumQuestLogChoices or _GetNumQuestChoices
+	local getNumRewards = isQuestLogOpen and _GetNumQuestLogRewards or _GetNumQuestRewards
+	local getItemLink = isQuestLogOpen and _GetQuestLogItemLink or _GetQuestItemLink
 
 	local numChoiceRewards = getNumChoices()
 	local numGuaranteedRewards = getNumRewards()
@@ -41,27 +41,27 @@ local function UpdateQuestRewardButtons(buttonNamePrefix)
 end
 
 -- Apply quality colors to quest required items
-local function UpdateQuestRequiredItems()
-	local numRequiredItems = GetNumQuestItems()
+local function updateQuestRequiredItems()
+	local numRequiredItems = _GetNumQuestItems()
 	for i = 1, numRequiredItems do
 		local requiredItemButton = _G["QuestProgressItem" .. i]
 		if requiredItemButton then
-			local requiredItemLink = GetQuestItemLink("required", i)
+			local requiredItemLink = _GetQuestItemLink("required", i)
 			applyQualityColorWithQuestCheck(requiredItemButton, requiredItemLink)
 		end
 	end
 end
 
 -- Hook quest NPC dialog updates
-local function UpdateQuestInfoRewards()
-	UpdateQuestRewardButtons("QuestInfoRewardsFrameQuestInfoItem")
+local function updateQuestInfoRewards()
+	updateQuestRewardButtons("QuestInfoRewardsFrameQuestInfoItem")
 end
 
-local function UpdateQuestLogRewards()
-	UpdateQuestRewardButtons("QuestLogItem")
+local function updateQuestLogRewards()
+	updateQuestRewardButtons("QuestLogItem")
 end
 
 -- Hook quest UI updates
-hooksecurefunc("QuestFrameProgressItems_Update", UpdateQuestRequiredItems)
-hooksecurefunc("QuestInfo_Display", UpdateQuestInfoRewards)
-hooksecurefunc("QuestLog_Update", UpdateQuestLogRewards)
+hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)
+hooksecurefunc("QuestInfo_Display", updateQuestInfoRewards)
+hooksecurefunc("QuestLog_Update", updateQuestLogRewards)

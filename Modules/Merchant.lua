@@ -1,15 +1,13 @@
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
 -- Localized API calls
-local _G = _G
-local MerchantFrame = MerchantFrame
-local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE
-local GetMerchantItemLink = GetMerchantItemLink
-local GetBuybackItemLink = GetBuybackItemLink
-local GetNumBuybackItems = GetNumBuybackItems
-local hooksecurefunc = hooksecurefunc
+local _GetMerchantItemLink = GetMerchantItemLink
+local _GetBuybackItemLink = GetBuybackItemLink
+local _GetNumBuybackItems = GetNumBuybackItems
 
 -- Constants
+local MerchantFrame = MerchantFrame
+local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE
 local NUM_BUYBACK_SLOTS = 12
 
 -- Cache merchant button references
@@ -21,7 +19,7 @@ for i = 1, MERCHANT_ITEMS_PER_PAGE do
 end
 
 -- Apply quality colors to merchant tab items
-local function UpdateMerchantTabItems()
+local function updateMerchantTabItems()
 	local currentPage = MerchantFrame.page or 1
 	local pageOffset = (currentPage - 1) * MERCHANT_ITEMS_PER_PAGE
 
@@ -29,23 +27,23 @@ local function UpdateMerchantTabItems()
 		local merchantItemButton = merchantButtonCache[i]
 		if merchantItemButton then
 			local itemIndex = pageOffset + i
-			local merchantItemLink = GetMerchantItemLink(itemIndex)
+			local merchantItemLink = _GetMerchantItemLink(itemIndex)
 			applyQualityColorWithQuestCheck(merchantItemButton, merchantItemLink)
 		end
 	end
 
 	if not buybackPreviewButton then return end
 
-	local mostRecentBuybackLink = GetBuybackItemLink(GetNumBuybackItems())
+	local mostRecentBuybackLink = _GetBuybackItemLink(_GetNumBuybackItems())
 	applyQualityColorWithQuestCheck(buybackPreviewButton, mostRecentBuybackLink)
 end
 
 -- Apply quality colors to buyback tab items
-local function UpdateBuybackTabItems()
+local function updateBuybackTabItems()
 	for i = 1, NUM_BUYBACK_SLOTS do
 		local buybackItemButton = merchantButtonCache[i]
 		if buybackItemButton then
-			local buybackItemLink = GetBuybackItemLink(i)
+			local buybackItemLink = _GetBuybackItemLink(i)
 			applyQualityColorWithQuestCheck(buybackItemButton, buybackItemLink)
 		end
 	end
@@ -54,13 +52,13 @@ end
 -- Hook merchant tab update
 hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
 	if MerchantFrame.selectedTab == 1 then
-		UpdateMerchantTabItems()
+		updateMerchantTabItems()
 	end
 end)
 
 -- Hook buyback tab update
 hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function()
 	if MerchantFrame.selectedTab == 2 then
-		UpdateBuybackTabItems()
+		updateBuybackTabItems()
 	end
 end)

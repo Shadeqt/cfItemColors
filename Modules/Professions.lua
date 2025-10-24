@@ -1,12 +1,10 @@
 local applyQualityColor = cfItemColors.applyQualityColor
 
 -- Localized API calls
-local _G = _G
-local GetTradeSkillSelectionIndex = GetTradeSkillSelectionIndex
-local GetTradeSkillReagentItemLink = GetTradeSkillReagentItemLink
-local GetTradeSkillItemLink = GetTradeSkillItemLink
-local hooksecurefunc = hooksecurefunc
-local CreateFrame = CreateFrame
+local _GetTradeSkillSelectionIndex = GetTradeSkillSelectionIndex
+local _GetTradeSkillReagentItemLink = GetTradeSkillReagentItemLink
+local _GetTradeSkillItemLink = GetTradeSkillItemLink
+local _CreateFrame = CreateFrame
 
 -- Constants
 local NUM_REAGENT_SLOTS = 8
@@ -16,7 +14,7 @@ local reagentButtonCache = {}
 local craftedItemButton = nil
 
 -- Initialize tradeskill button cache
-local function InitializeTradeSkillCache()
+local function initializeTradeSkillCache()
 	craftedItemButton = _G["TradeSkillSkillIcon"]
 	for i = 1, NUM_REAGENT_SLOTS do
 		reagentButtonCache[i] = _G["TradeSkillReagent" .. i]
@@ -24,30 +22,30 @@ local function InitializeTradeSkillCache()
 end
 
 -- Apply quality colors to crafted item and reagents
-local function UpdateTradeSkillItems()
-	local selectedRecipeIndex = GetTradeSkillSelectionIndex()
+local function updateTradeSkillItems()
+	local selectedRecipeIndex = _GetTradeSkillSelectionIndex()
 
 	if craftedItemButton then
-		local craftedItemLink = GetTradeSkillItemLink(selectedRecipeIndex)
+		local craftedItemLink = _GetTradeSkillItemLink(selectedRecipeIndex)
 		applyQualityColor(craftedItemButton, craftedItemLink)
 	end
 
 	for i = 1, NUM_REAGENT_SLOTS do
 		local reagentButton = reagentButtonCache[i]
 		if reagentButton then
-			local reagentItemLink = GetTradeSkillReagentItemLink(selectedRecipeIndex, i)
+			local reagentItemLink = _GetTradeSkillReagentItemLink(selectedRecipeIndex, i)
 			applyQualityColor(reagentButton, reagentItemLink)
 		end
 	end
 end
 
 -- Wait for Blizzard_TradeSkillUI to load
-local eventFrame = CreateFrame("Frame")
+local eventFrame = _CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_TradeSkillUI" then
-		InitializeTradeSkillCache()
-		hooksecurefunc("TradeSkillFrame_Update", UpdateTradeSkillItems)
+		initializeTradeSkillCache()
+		hooksecurefunc("TradeSkillFrame_Update", updateTradeSkillItems)
 		self:UnregisterEvent("ADDON_LOADED")
 	end
 end)

@@ -1,32 +1,30 @@
 local addon = cfItemColors
 
 -- Localized API calls
-local wipe = wipe
-local string_match = string.match
-local CreateFrame = CreateFrame
-local GetNumQuestLogEntries = GetNumQuestLogEntries
-local GetQuestLogTitle = GetQuestLogTitle
-local GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
-local GetQuestLogLeaderBoard = GetQuestLogLeaderBoard
-local GetQuestLogSpecialItemInfo = GetQuestLogSpecialItemInfo
+local _CreateFrame = CreateFrame
+local _GetNumQuestLogEntries = GetNumQuestLogEntries
+local _GetQuestLogTitle = GetQuestLogTitle
+local _GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
+local _GetQuestLogLeaderBoard = GetQuestLogLeaderBoard
+local _GetQuestLogSpecialItemInfo = GetQuestLogSpecialItemInfo
 
 -- Quest objective item cache
 local questObjectiveCache = {}
 
 -- Rebuild quest objective cache from quest log
-local function RebuildQuestObjectiveCache()
-	wipe(questObjectiveCache)
+local function rebuildQuestObjectiveCache()
+	wipe(questObjectiveCache)  -- wipe is Lua table function, no underscore prefix
 
-	local numQuests = GetNumQuestLogEntries()
+	local numQuests = _GetNumQuestLogEntries()
 	for questIndex = 1, numQuests do
-		local _, _, _, isHeader = GetQuestLogTitle(questIndex)
+		local _, _, _, isHeader = _GetQuestLogTitle(questIndex)
 		if not isHeader then
 			-- Process quest objectives
-			local numObjectives = GetNumQuestLeaderBoards(questIndex)
+			local numObjectives = _GetNumQuestLeaderBoards(questIndex)
 			for objectiveIndex = 1, numObjectives do
-				local objectiveText, objectiveType = GetQuestLogLeaderBoard(objectiveIndex, questIndex)
+				local objectiveText, objectiveType = _GetQuestLogLeaderBoard(objectiveIndex, questIndex)
 				if objectiveType == "item" and objectiveText then
-					local questItemName = string_match(objectiveText, "^(.-):%s*%d+/%d+")
+					local questItemName = string.match(objectiveText, "^(.-):%s*%d+/%d+")
 					if questItemName then
 						questObjectiveCache[questItemName] = true
 					end
@@ -34,9 +32,9 @@ local function RebuildQuestObjectiveCache()
 			end
 
 			-- Process special quest items
-			local specialItemLink = GetQuestLogSpecialItemInfo(questIndex)
+			local specialItemLink = _GetQuestLogSpecialItemInfo(questIndex)
 			if specialItemLink then
-				local specialItemName = string_match(specialItemLink, "|h%[([^%]]+)%]|h")
+				local specialItemName = string.match(specialItemLink, "|h%[([^%]]+)%]|h")
 				if specialItemName then
 					questObjectiveCache[specialItemName] = true
 				end
@@ -52,7 +50,7 @@ function addon.IsQuestObjective(itemName)
 end
 
 -- Listen for quest log changes
-local eventFrame = CreateFrame("Frame")
+local eventFrame = _CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:SetScript("OnEvent", RebuildQuestObjectiveCache)
+eventFrame:SetScript("OnEvent", rebuildQuestObjectiveCache)
