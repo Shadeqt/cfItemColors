@@ -86,11 +86,11 @@ local function ApplyQualityColorInternal(button, itemIdOrLink, checkQuestObjecti
 end
 
 -- Apply quality-colored border (no quest detection)
-function addon.ApplyQualityColor(button, itemIdOrLink)
+function addon.applyQualityColor(button, itemIdOrLink)
 	ApplyQualityColorInternal(button, itemIdOrLink, false)
 end
 
 -- Apply quality-colored border with quest objective detection
-function addon.ApplyQualityColorWithQuestCheck(button, itemIdOrLink)
+function addon.applyQualityColorWithQuestCheck(button, itemIdOrLink)
 	ApplyQualityColorInternal(button, itemIdOrLink, true)
 end

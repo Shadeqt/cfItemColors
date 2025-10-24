@@ -1,5 +1,5 @@
 local addon = cfItemColors
-local applyQualityColor = addon.ApplyQualityColor
+local applyQualityColor = addon.applyQualityColor
 
 -- Localized API calls
 local _G = _G

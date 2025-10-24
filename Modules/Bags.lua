@@ -1,4 +1,4 @@
-local applyQualityColorWithQuestCheck = cfItemColors.ApplyQualityColorWithQuestCheck
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
 -- Localized API calls
 local IsBagOpen = IsBagOpen

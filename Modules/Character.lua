@@ -1,5 +1,5 @@
 local addon = cfItemColors
-local applyQualityColor = addon.ApplyQualityColor
+local applyQualityColor = addon.applyQualityColor
 
 -- Localized API calls
 local _G = _G
@@ -27,7 +27,7 @@ end
 
 -- Apply quality colors to all equipment slots
 local function UpdateAllEquipmentSlots()
-	for slotId = 1, #EQUIPMENT_SLOTS do
+		for slotId = 1, #EQUIPMENT_SLOTS do
 		UpdateSingleEquipmentSlot(slotId)
 	end
 end

@@ -1,4 +1,4 @@
-local applyQualityColor = cfItemColors.ApplyQualityColor
+local applyQualityColor = cfItemColors.applyQualityColor
 
 -- Localized API calls
 local _G = _G

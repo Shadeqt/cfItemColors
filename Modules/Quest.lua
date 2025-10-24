@@ -1,6 +1,6 @@
 local addon = cfItemColors
-local applyQualityColor = addon.ApplyQualityColor
-local applyQualityColorWithQuestCheck = addon.ApplyQualityColorWithQuestCheck
+local applyQualityColor = addon.applyQualityColor
+local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
 
 -- Localized API calls
 local _G = _G
