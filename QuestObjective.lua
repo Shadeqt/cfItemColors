@@ -1,5 +1,9 @@
 local addon = cfItemColors
 
+-- Lua built-ins
+local wipe = wipe
+local match = string.match
+
 -- WoW API calls
 local _CreateFrame = CreateFrame
 local _GetNumQuestLogEntries = GetNumQuestLogEntries
@@ -13,7 +17,7 @@ local questObjectiveCache = {}
 
 -- Rebuild quest objective cache from quest log
 local function rebuildQuestObjectiveCache()
-	wipe(questObjectiveCache)  -- wipe is Lua table function, no underscore prefix
+	wipe(questObjectiveCache)
 
 	local numQuests = _GetNumQuestLogEntries()
 	for questIndex = 1, numQuests do
@@ -24,7 +28,7 @@ local function rebuildQuestObjectiveCache()
 			for objectiveIndex = 1, numObjectives do
 				local objectiveText, objectiveType = _GetQuestLogLeaderBoard(objectiveIndex, questIndex)
 				if objectiveType == "item" and objectiveText then
-					local questItemName = string.match(objectiveText, "^(.-):%s*%d+/%d+")
+					local questItemName = match(objectiveText, "^(.-):%s*%d+/%d+")
 					if questItemName then
 						questObjectiveCache[questItemName] = true
 					end
@@ -34,7 +38,7 @@ local function rebuildQuestObjectiveCache()
 			-- Process special quest items
 			local specialItemLink = _GetQuestLogSpecialItemInfo(questIndex)
 			if specialItemLink then
-				local specialItemName = string.match(specialItemLink, "|h%[([^%]]+)%]|h")
+				local specialItemName = match(specialItemLink, "|h%[([^%]]+)%]|h")
 				if specialItemName then
 					questObjectiveCache[specialItemName] = true
 				end
