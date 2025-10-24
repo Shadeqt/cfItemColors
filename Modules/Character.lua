@@ -1,7 +1,7 @@
 local addon = cfItemColors
 local applyQualityColor = addon.applyQualityColor
 
--- Localized API calls
+-- WoW API calls
 local _GetInventoryItemLink = GetInventoryItemLink
 local _CreateFrame = CreateFrame
 

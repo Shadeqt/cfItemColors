@@ -1,6 +1,6 @@
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- Localized API calls
+-- WoW API calls
 local _IsBagOpen = IsBagOpen
 local _C_Container = C_Container
 local _C_Timer = C_Timer

@@ -1,7 +1,7 @@
 cfItemColors = {}
 local addon = cfItemColors
 
--- Localized API calls
+-- WoW API calls
 local _GetItemInfo = GetItemInfo
 
 -- Quality color configuration

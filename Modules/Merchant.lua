@@ -1,6 +1,6 @@
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- Localized API calls
+-- WoW API calls
 local _GetMerchantItemLink = GetMerchantItemLink
 local _GetBuybackItemLink = GetBuybackItemLink
 local _GetNumBuybackItems = GetNumBuybackItems

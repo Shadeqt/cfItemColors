@@ -2,7 +2,7 @@ local addon = cfItemColors
 local applyQualityColor = addon.applyQualityColor
 local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
 
--- Localized API calls
+-- WoW API calls
 local _GetNumQuestLogChoices = GetNumQuestLogChoices
 local _GetNumQuestChoices = GetNumQuestChoices
 local _GetNumQuestLogRewards = GetNumQuestLogRewards

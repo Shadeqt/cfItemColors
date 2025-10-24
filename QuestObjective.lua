@@ -1,6 +1,6 @@
 local addon = cfItemColors
 
--- Localized API calls
+-- WoW API calls
 local _CreateFrame = CreateFrame
 local _GetNumQuestLogEntries = GetNumQuestLogEntries
 local _GetQuestLogTitle = GetQuestLogTitle

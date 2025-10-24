@@ -1,6 +1,6 @@
 local applyQualityColor = cfItemColors.applyQualityColor
 
--- Localized API calls
+-- WoW API calls
 local _GetTradeSkillSelectionIndex = GetTradeSkillSelectionIndex
 local _GetTradeSkillReagentItemLink = GetTradeSkillReagentItemLink
 local _GetTradeSkillItemLink = GetTradeSkillItemLink

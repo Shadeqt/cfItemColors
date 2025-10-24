@@ -1,7 +1,7 @@
 local addon = cfItemColors
 local applyQualityColor = addon.applyQualityColor
 
--- Localized API calls
+-- WoW API calls
 local _GetInventorySlotInfo = GetInventorySlotInfo
 local _GetInventoryItemLink = GetInventoryItemLink
 local _C_Timer = C_Timer
