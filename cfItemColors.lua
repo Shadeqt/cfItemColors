@@ -61,7 +61,7 @@ local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjecti
 	-- Determine quality level (with quest check if needed)
 	local qualityLevel = itemQuality
 	if checkQuestObjectives then
-		local isQuestItem = itemQuality <= 1 and (itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName] == true)
+		local isQuestItem = itemQuality <= 1 and (itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName] ~= nil)
 		qualityLevel = isQuestItem and 99 or itemQuality
 	end
 

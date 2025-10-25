@@ -7,6 +7,7 @@
 # Core module (must load first)
 cfItemColors.lua
 #Debug.lua
+#BAG_BANK_EVENT_INVESTIGATION.lua
 
 # Domain modules
 Modules\Bags.lua
