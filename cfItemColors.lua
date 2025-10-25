@@ -19,7 +19,8 @@ addon.questObjectiveCache = {}
 local function createCustomBorder(button)
 	local customBorder = button:CreateTexture(nil, "OVERLAY")
 	customBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-	customBorder:SetTexCoord(0.25, 0.75, 0.25, 0.75)
+	-- customBorder:SetTexCoord(0.25, 0.75, 0.25, 0.75)
+	customBorder:SetTexCoord(0.225, 0.775, 0.225, 0.775)
 	customBorder:SetBlendMode("ADD")
 	customBorder:SetAlpha(0.8)
 
