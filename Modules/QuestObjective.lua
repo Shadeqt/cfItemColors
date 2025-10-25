@@ -1,9 +1,5 @@
 local addon = cfItemColors
 
--- Lua built-ins
-local wipe = wipe
-local match = string.match
-
 -- WoW API calls
 local _CreateFrame = CreateFrame
 local _GetNumQuestLogEntries = GetNumQuestLogEntries
@@ -12,12 +8,13 @@ local _GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
 local _GetQuestLogLeaderBoard = GetQuestLogLeaderBoard
 local _GetQuestLogSpecialItemInfo = GetQuestLogSpecialItemInfo
 
--- Quest objective item cache
-local questObjectiveCache = {}
+-- Lua built-ins
+local wipe = wipe
+local match = string.match
 
 -- Rebuild quest objective cache from quest log
 local function rebuildQuestObjectiveCache()
-	wipe(questObjectiveCache)
+	wipe(addon.questObjectiveCache)
 
 	local numQuests = _GetNumQuestLogEntries()
 	for questIndex = 1, numQuests do
@@ -29,9 +26,7 @@ local function rebuildQuestObjectiveCache()
 				local objectiveText, objectiveType = _GetQuestLogLeaderBoard(objectiveIndex, questIndex)
 				if objectiveType == "item" and objectiveText then
 					local questItemName = match(objectiveText, "^(.-):%s*%d+/%d+")
-					if questItemName then
-						questObjectiveCache[questItemName] = true
-					end
+					if questItemName then addon.questObjectiveCache[questItemName] = true end
 				end
 			end
 
@@ -39,22 +34,15 @@ local function rebuildQuestObjectiveCache()
 			local specialItemLink = _GetQuestLogSpecialItemInfo(questIndex)
 			if specialItemLink then
 				local specialItemName = match(specialItemLink, "|h%[([^%]]+)%]|h")
-				if specialItemName then
-					questObjectiveCache[specialItemName] = true
-				end
+				if specialItemName then addon.questObjectiveCache[specialItemName] = true end
 			end
 		end
 	end
 end
 
--- Check if item is a quest objective
-function addon.IsQuestObjective(itemName)
-	if not itemName then return false end
-	return questObjectiveCache[itemName] == true
-end
-
--- Listen for quest log changes
-local eventFrame = _CreateFrame("Frame")
-eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:SetScript("OnEvent", rebuildQuestObjectiveCache)
+-- Register quest lifecycle events
+local questEventFrame = _CreateFrame("Frame")
+questEventFrame:RegisterEvent("QUEST_ACCEPTED")
+questEventFrame:RegisterEvent("QUEST_REMOVED")
+questEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+questEventFrame:SetScript("OnEvent", rebuildQuestObjectiveCache)

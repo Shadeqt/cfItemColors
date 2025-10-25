@@ -8,11 +8,12 @@ local _GetItemInfo = GetItemInfo
 local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
 QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0}
 
--- Equipment slot names
+-- Shared state
 addon.EQUIPMENT_SLOTS = {
 	"Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrist", "Hands",
 	"Finger0", "Finger1", "Trinket0", "Trinket1", "Back", "MainHand", "SecondaryHand", "Ranged", "Tabard", "Ammo"
 }
+addon.questObjectiveCache = {}
 
 -- Create custom border texture for button
 local function createCustomBorder(button)
@@ -57,17 +58,17 @@ local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjecti
 	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = _GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
-	-- Early exit if quality unchanged
-	if button.cachedQuality == itemQuality then
-		button.cachedItemLink = itemIdOrLink
-		return
-	end
-
 	-- Determine quality level (with quest check if needed)
 	local qualityLevel = itemQuality
 	if checkQuestObjectives then
-		local isQuestItem = itemQuality <= 1 and (itemType == "Quest" or itemClassId == 12 or addon.IsQuestObjective(itemName))
+		local isQuestItem = itemQuality <= 1 and (itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName] == true)
 		qualityLevel = isQuestItem and 99 or itemQuality
+	end
+
+	-- Early exit if effective quality unchanged
+	if button.cachedQuality == qualityLevel then
+		button.cachedItemLink = itemIdOrLink
+		return
 	end
 
 	-- Apply border color for quality 2+ items
@@ -79,9 +80,9 @@ local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjecti
 		button.customBorder:Hide()
 	end
 
-	-- Cache the item link and quality
+	-- Cache the item link and effective quality
 	button.cachedItemLink = itemIdOrLink
-	button.cachedQuality = itemQuality
+	button.cachedQuality = qualityLevel
 end
 
 -- Apply quality-colored border (no quest detection)

@@ -6,7 +6,6 @@
 
 # Core module (must load first)
 cfItemColors.lua
-QuestObjective.lua
 #Debug.lua
 
 # Domain modules
@@ -18,3 +17,4 @@ Modules\Loot.lua
 Modules\Merchant.lua
 Modules\Professions.lua
 Modules\Quest.lua
+Modules\QuestObjective.lua
