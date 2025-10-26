@@ -1,21 +1,24 @@
+-- Main coloring function from parent module
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- WoW API calls
+-- Localized WoW API calls for performance
 local _IsBagOpen = IsBagOpen
-local _C_Container = C_Container
-local _C_Timer = C_Timer
+local _GetContainerItemID = C_Container.GetContainerItemID
 local _CreateFrame = CreateFrame
+local _hooksecurefunc = hooksecurefunc
+local _G = _G
+
+-- WoW constants
+local NUM_BAG_SLOTS = NUM_BAG_SLOTS  -- 4 (regular bag slots 1-4)
+local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS  -- 6 (bank bag slots 5-10)
 
 -- Constants
-local NUM_BAG_SLOTS = NUM_BAG_SLOTS
-local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS
+local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS
 
--- Bank bag slot range
-local NUM_FIRST_BANK_BAG_SLOT = NUM_BAG_SLOTS + 1
-local NUM_LAST_BANK_BAG_SLOT = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS
-
--- Apply quality colors to all item buttons in a single bag
+-- Updates all item buttons in a single bag with quality colors
 local function updateSingleBagColors(bagId)
+	if bagId < 0 or bagId > NUM_BAG_BANK_SLOTS then return end
+	
 	local frameId = _IsBagOpen(bagId)
 	if not frameId then return end
 
@@ -26,44 +29,55 @@ local function updateSingleBagColors(bagId)
 	for i = 1, containerFrame.size do
 		local bagItemButton = _G[containerFrameName .. "Item" .. i]
 		if bagItemButton then
-			local containerItemId = _C_Container.GetContainerItemID(bagId, bagItemButton:GetID())
+			local bagItemButtonId = bagItemButton:GetID()
+			local containerItemId = _GetContainerItemID(bagId, bagItemButtonId)
 			applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
 		end
 	end
 end
 
--- Apply quality colors to all bags when opening all at once
-local function updateAllBagColors()
-	local containerFrame = _G["ContainerFrame1"]
-	if not containerFrame then return end
-	if not containerFrame.allBags then return end
-
-	-- Delay needed to let WoW create bag frames before coloring
-	_C_Timer.After(0.01, function()
-		-- Update player bags (0-4)
-		for bagId = 0, NUM_BAG_SLOTS do
+-- Updates all currently open bags with quality colors
+local function updateAllOpenBagColors()
+	for bagId = 0, NUM_BAG_BANK_SLOTS do
+		if _IsBagOpen(bagId) then
 			updateSingleBagColors(bagId)
 		end
-
-		-- Also update bank bags if bank is open
-		local bankFrame = _G["BankFrame"]
-		if bankFrame and bankFrame:IsShown() then
-			for bagId = NUM_FIRST_BANK_BAG_SLOT, NUM_LAST_BANK_BAG_SLOT do
-				updateSingleBagColors(bagId)
-			end
-		end
-	end)
+	end
 end
 
--- Hook bag open/close events
-hooksecurefunc("ToggleBag", updateSingleBagColors)
-hooksecurefunc("ToggleBackpack", updateAllBagColors)
-
--- Listen for bag content changes (item added/removed/moved)
+-- Only 2 events needed for complete coverage
 local eventFrame = _CreateFrame("Frame")
-eventFrame:RegisterEvent("BAG_UPDATE")
-eventFrame:SetScript("OnEvent", function(_, _, bagId)
-	if _IsBagOpen(bagId) then
+eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")  -- Bag content changes (bags 0-10)
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  -- Login initialization
+
+-- Processes bag changes and login
+eventFrame:SetScript("OnEvent", function(_, event, bagId)
+	if event == "BAG_UPDATE_DELAYED" then
+		-- Specific bag operations (moves, new items) provide exact bagId
+		if bagId and bagId >= 0 and bagId <= NUM_BAG_BANK_SLOTS and _IsBagOpen(bagId) then
+			updateSingleBagColors(bagId)
+		-- Stack operations (splits, deletions) provide nil bagId
+		elseif bagId == nil then
+			updateAllOpenBagColors()
+		end
+		
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		updateAllOpenBagColors()
+	end
+end)
+
+-- Handles user clicks on bag icons and B keybind
+_hooksecurefunc("ToggleBag", function(bagId)
+	-- Only process valid bag IDs (0-4) that are currently open
+	if bagId >= 0 and bagId <= NUM_BAG_BANK_SLOTS and _IsBagOpen(bagId) then
+		updateSingleBagColors(bagId)
+	end
+end)
+
+-- Handles system-opened bags (vendor, mail, bank interactions)
+_hooksecurefunc("OpenBag", function(bagId)
+	-- Only process bags 1-11 (regular bags + bank bags, excludes backpack since ToggleBag handles it)
+	if bagId >= 1 and bagId <= NUM_BAG_BANK_SLOTS and _IsBagOpen(bagId) then
 		updateSingleBagColors(bagId)
 	end
 end)

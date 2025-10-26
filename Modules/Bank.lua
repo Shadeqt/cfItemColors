@@ -1,44 +1,55 @@
+-- Main coloring function from parent module
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- WoW API calls
-local _C_Container = C_Container
+-- Localized WoW API calls for performance
+local _GetContainerItemID = C_Container.GetContainerItemID
+local _IsBagOpen = IsBagOpen
 local _CreateFrame = CreateFrame
+local _hooksecurefunc = hooksecurefunc
+local _G = _G
+
+-- WoW constants
+local BANK_CONTAINER = BANK_CONTAINER  -- -1 (bank container ID)
 
 -- Constants
-local BANK_CONTAINER = BANK_CONTAINER
 local NUM_BANK_SLOTS = 24
 
--- Cache button references to avoid repeated _G lookups
-local slotButtonCache = {}
+-- Cache bank slot button references to avoid repeated _G lookups
+local bankSlotButtonCache = {}
 for i = 1, NUM_BANK_SLOTS do
-	slotButtonCache[i] = _G["BankFrameItem" .. i]
+	bankSlotButtonCache[i] = _G["BankFrameItem" .. i]
 end
 
--- Apply quality color to a single bank slot
+-- Updates a single bank container slot with quality color
 local function updateSingleBankSlot(slotId)
-	local bankSlotButton = slotButtonCache[slotId]
+	if slotId < 1 or slotId > NUM_BANK_SLOTS then return end
+	
+	local bankSlotButton = bankSlotButtonCache[slotId]
 	if not bankSlotButton then return end
 
-	local containerItemId = _C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
+	local containerItemId = _GetContainerItemID(BANK_CONTAINER, slotId)
 	applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
 end
 
--- Apply quality colors to all bank slots
+-- Updates all bank container slots with quality colors
 local function updateAllBankSlots()
-	local numBankSlots = _C_Container.GetContainerNumSlots(BANK_CONTAINER)
-	for i = 1, numBankSlots do
-		updateSingleBankSlot(i)
+	for slotId = 1, NUM_BANK_SLOTS do
+		updateSingleBankSlot(slotId)
 	end
 end
 
--- Listen for bank events
+-- Events needed for bank container coverage
 local eventFrame = _CreateFrame("Frame")
-eventFrame:RegisterEvent("BANKFRAME_OPENED")
-eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")  -- Bank container (ID:-1)
+eventFrame:RegisterEvent("BANKFRAME_OPENED")         -- Bank window opened
+
+-- Processes bank changes and window opening
 eventFrame:SetScript("OnEvent", function(_, event, slotId)
-	if event == "BANKFRAME_OPENED" then
-		updateAllBankSlots()
-	elseif event == "PLAYERBANKSLOTS_CHANGED" then
+	if event == "PLAYERBANKSLOTS_CHANGED" then
 		updateSingleBankSlot(slotId)
+	elseif event == "BANKFRAME_OPENED" then
+		updateAllBankSlots()
 	end
 end)
+
+

@@ -1,0 +1,44 @@
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+
+-- WoW API calls
+local _C_Container = C_Container
+local _CreateFrame = CreateFrame
+
+-- Constants
+local BANK_CONTAINER = BANK_CONTAINER
+local NUM_BANK_SLOTS = 24
+
+-- Cache button references to avoid repeated _G lookups
+local slotButtonCache = {}
+for i = 1, NUM_BANK_SLOTS do
+	slotButtonCache[i] = _G["BankFrameItem" .. i]
+end
+
+-- Apply quality color to a single bank slot
+local function updateSingleBankSlot(slotId)
+	local bankSlotButton = slotButtonCache[slotId]
+	if not bankSlotButton then return end
+
+	local containerItemId = _C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
+	applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
+end
+
+-- Apply quality colors to all bank slots
+local function updateAllBankSlots()
+	local numBankSlots = _C_Container.GetContainerNumSlots(BANK_CONTAINER)
+	for i = 1, numBankSlots do
+		updateSingleBankSlot(i)
+	end
+end
+
+-- Listen for bank events
+local eventFrame = _CreateFrame("Frame")
+eventFrame:RegisterEvent("BANKFRAME_OPENED")
+eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+eventFrame:SetScript("OnEvent", function(_, event, slotId)
+	if event == "BANKFRAME_OPENED" then
+		updateAllBankSlots()
+	elseif event == "PLAYERBANKSLOTS_CHANGED" then
+		updateSingleBankSlot(slotId)
+	end
+end)
