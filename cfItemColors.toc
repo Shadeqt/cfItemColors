@@ -8,12 +8,15 @@
 cfItemColors.lua
 
 # Domain modules
+Modules\AuctionHouse.lua
 Modules\Bags.lua
 Modules\Bank.lua
 Modules\Character.lua
 Modules\Inspect.lua
 Modules\Loot.lua
+Modules\Mailbox.lua
 Modules\Merchant.lua
 Modules\Professions.lua
 Modules\Quest.lua
 Modules\QuestObjective.lua
+Modules\Trade.lua
