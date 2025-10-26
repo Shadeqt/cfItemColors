@@ -1,105 +1,87 @@
 local addon = cfItemColors
 
--- WoW API calls
+-- Cache API calls
 local _CreateFrame = CreateFrame
 local _GetNumQuestLogEntries = GetNumQuestLogEntries
 local _GetQuestLogTitle = GetQuestLogTitle
 local _GetNumQuestLeaderBoards = GetNumQuestLeaderBoards
 local _GetQuestLogLeaderBoard = GetQuestLogLeaderBoard
 local _GetQuestLogSpecialItemInfo = GetQuestLogSpecialItemInfo
+local _wipe = wipe
+local _pairs = pairs
 
--- Lua built-ins
-local wipe = wipe
-local match = string.match
-local pairs = pairs
-
--- Extract item names from a single quest at the given quest log index
-local function extractQuestItems(questIndex, questId)
+-- Extract quest item names from a single quest
+local function extractQuestItems(questLogIndex)
 	local items = {}
 
-	-- Process quest objectives
-	local numObjectives = _GetNumQuestLeaderBoards(questIndex)
-	for objectiveIndex = 1, numObjectives do
-		local objectiveText, objectiveType = _GetQuestLogLeaderBoard(objectiveIndex, questIndex)
+	-- Quest objectives (kill X wolves, collect Y items)
+	local numObjectives = _GetNumQuestLeaderBoards(questLogIndex)
+	for i = 1, numObjectives do
+		local objectiveText, objectiveType = _GetQuestLogLeaderBoard(i, questLogIndex)
+		
+
+		
 		if objectiveType == "item" and objectiveText then
-			local questItemName = match(objectiveText, "^(.-):%s*%d+/%d+")
-			if questItemName then
-				items[questItemName] = true
+			local itemName = objectiveText:match("^(.-):%s*%d+/%d+")
+			if itemName then
+				items[itemName] = true
 			end
 		end
 	end
 
-	-- Process special quest items
-	local specialItemLink = _GetQuestLogSpecialItemInfo(questIndex)
+	-- Special quest items (right-click to use)
+	local specialItemLink = _GetQuestLogSpecialItemInfo(questLogIndex)
 	if specialItemLink then
-		local specialItemName = match(specialItemLink, "|h%[([^%]]+)%]|h")
-		if specialItemName then
-			items[specialItemName] = true
+		local itemName = specialItemLink:match("|h%[([^%]]+)%]|h")
+		if itemName then
+			items[itemName] = true
 		end
 	end
 
 	return items
 end
 
--- Add items to cache with questId ownership
-local function addItemsToCache(items, questId)
-	for itemName in pairs(items) do
+-- Add quest items to cache
+local function addQuestItems(questLogIndex, questId)
+	local items = extractQuestItems(questLogIndex)
+	for itemName in _pairs(items) do
 		addon.questObjectiveCache[itemName] = questId
 	end
 end
 
--- Remove all items belonging to the specified questId
-local function removeItemsForQuest(questId)
-	for itemName, ownerId in pairs(addon.questObjectiveCache) do
+-- Remove quest items from cache
+local function removeQuestItems(questId)
+	for itemName, ownerId in _pairs(addon.questObjectiveCache) do
 		if ownerId == questId then
 			addon.questObjectiveCache[itemName] = nil
 		end
 	end
 end
 
--- Event handler: Quest accepted (incremental add - scan only the new quest)
-local function onQuestAccepted(questLogIndex, questId)
-	if not questId then return end
-
-	local items = extractQuestItems(questLogIndex, questId)
-	addItemsToCache(items, questId)
-end
-
--- Event handler: Quest removed (incremental remove - no quest scanning needed)
-local function onQuestRemoved(questId)
-	if not questId then return end
-
-	removeItemsForQuest(questId)
-end
-
--- Event handler: Login/reload (full rebuild necessary)
-local function onPlayerEnteringWorld()
-	wipe(addon.questObjectiveCache)
-
+-- Rebuild entire cache
+local function rebuildCache()
+	_wipe(addon.questObjectiveCache)
+	
 	local numQuests = _GetNumQuestLogEntries()
-	for questIndex = 1, numQuests do
-		local _, _, _, isHeader, _, _, _, questId = _GetQuestLogTitle(questIndex)
+	for i = 1, numQuests do
+		local _, _, _, isHeader, _, _, _, questId = _GetQuestLogTitle(i)
 		if not isHeader and questId then
-			local items = extractQuestItems(questIndex, questId)
-			addItemsToCache(items, questId)
+			addQuestItems(i, questId)
 		end
 	end
 end
 
--- Event dispatcher
-local function onQuestEvent(event, arg1, arg2)
+-- Register events
+local eventFrame = _CreateFrame("Frame")
+eventFrame:RegisterEvent("QUEST_ACCEPTED")
+eventFrame:RegisterEvent("QUEST_REMOVED")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:SetScript("OnEvent", function(_, event, questLogIndex, questId)
 	if event == "QUEST_ACCEPTED" then
-		onQuestAccepted(arg1, arg2)  -- questLogIndex, questId
+		addQuestItems(questLogIndex, questId)
 	elseif event == "QUEST_REMOVED" then
-		onQuestRemoved(arg1)  -- questId
+		removeQuestItems(questLogIndex)
 	elseif event == "PLAYER_ENTERING_WORLD" then
-		onPlayerEnteringWorld()  -- isLogin, isReload (unused)
+		rebuildCache()
 	end
-end
-
--- Register quest lifecycle events
-local questEventFrame = _CreateFrame("Frame")
-questEventFrame:RegisterEvent("QUEST_ACCEPTED")
-questEventFrame:RegisterEvent("QUEST_REMOVED")
-questEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-questEventFrame:SetScript("OnEvent", onQuestEvent)
+end)

@@ -15,6 +15,13 @@ addon.EQUIPMENT_SLOTS = {
 }
 addon.questObjectiveCache = {}
 
+-- Quest items that are misclassified by WoW's item system
+-- These items are quest-related but not marked as itemType="Quest" or itemClassId=12
+local MISCLASSIFIED_QUEST_ITEMS = {
+	["Kravel's Crate"] = true,
+	-- Add more misclassified quest items here as discovered
+}
+
 -- Create custom border texture for button
 local function createCustomBorder(button)
 	local customBorder = button:CreateTexture(nil, "OVERLAY")
@@ -62,7 +69,12 @@ local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjecti
 	-- Determine quality level (with quest check if needed)
 	local qualityLevel = itemQuality
 	if checkQuestObjectives then
-		local isQuestItem = itemQuality <= 1 and (itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName] ~= nil)
+		local isQuestItem = itemQuality <= 1 and (
+			itemType == "Quest" or 
+			itemClassId == 12 or 
+			addon.questObjectiveCache[itemName] ~= nil or
+			MISCLASSIFIED_QUEST_ITEMS[itemName]
+		)
 		qualityLevel = isQuestItem and 99 or itemQuality
 	end
 
