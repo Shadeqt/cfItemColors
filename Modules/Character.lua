@@ -1,21 +1,17 @@
 -- Main coloring function from parent module
 local applyQualityColor = cfItemColors.applyQualityColor
 
+local EQUIPMENT_SLOTS = addon.EQUIPMENT_SLOTS
+
 -- Localized WoW API calls for performance
 local _GetInventoryItemLink = GetInventoryItemLink
 local _CreateFrame = CreateFrame
 local _G = _G
 
--- Equipment slot names (Classic Era slots 1-19)
-local EQUIPMENT_SLOT_NAMES = {
-	"Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrist", "Hands",
-	"Finger0", "Finger1", "Trinket0", "Trinket1", "Back", "MainHand", "SecondaryHand", "Ranged", "Tabard"
-}
-
 -- Cache equipment slot button references to avoid repeated _G lookups
 local equipmentSlotButtonCache = {}
-for slotId = 1, #EQUIPMENT_SLOT_NAMES do
-	equipmentSlotButtonCache[slotId] = _G["Character" .. EQUIPMENT_SLOT_NAMES[slotId] .. "Slot"]
+for slotId = 1, #EQUIPMENT_SLOTS do
+	equipmentSlotButtonCache[slotId] = _G["Character" .. EQUIPMENT_SLOTS[slotId] .. "Slot"]
 end
 
 -- Updates a single equipment slot with quality color
@@ -31,7 +27,7 @@ end
 
 -- Updates all equipment slots with quality colors
 local function updateAllEquipmentSlots()
-	for slotId = 1, #EQUIPMENT_SLOT_NAMES do
+	for slotId = 1, #EQUIPMENT_SLOTS do
 		updateSingleEquipmentSlot(slotId)
 	end
 end

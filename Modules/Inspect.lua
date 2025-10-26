@@ -1,46 +1,44 @@
 local addon = cfItemColors
 local applyQualityColor = addon.applyQualityColor
 
--- WoW API calls
+-- Cache API calls
 local _GetInventorySlotInfo = GetInventorySlotInfo
 local _GetInventoryItemLink = GetInventoryItemLink
-local _C_Timer = C_Timer
 local _CreateFrame = CreateFrame
+local _C_Timer = C_Timer
+local _G = _G
 
--- Equipment slot configuration
 local EQUIPMENT_SLOTS = addon.EQUIPMENT_SLOTS
 
--- Cache slot data (button reference and slot ID)
+-- Cache slot data
 local inspectSlotCache = {}
 
--- Initialize cache when Blizzard_InspectUI loads
-local function initializeInspectCache()
+-- Initialize cache
+local function initializeCache()
 	for slotId = 1, #EQUIPMENT_SLOTS do
 		local slotName = EQUIPMENT_SLOTS[slotId]
 		inspectSlotCache[slotId] = {
 			button = _G["Inspect" .. slotName .. "Slot"],
-			slotId = _GetInventorySlotInfo(slotName .. "Slot")
+			inventorySlotId = _GetInventorySlotInfo(slotName .. "Slot")
 		}
 	end
 end
 
--- Apply quality colors to all inspect equipment slots
-local function updateAllInspectEquipmentSlots()
+-- Update all inspect equipment slots
+local function updateAllInspectSlots()
 	for slotId = 1, #EQUIPMENT_SLOTS do
 		local slotData = inspectSlotCache[slotId]
-		if slotData and slotData.button and slotData.slotId then
-			local targetInventoryItemLink = _GetInventoryItemLink("target", slotData.slotId)
-			applyQualityColor(slotData.button, targetInventoryItemLink)
+		if slotData and slotData.button then
+			local itemLink = _GetInventoryItemLink("target", slotData.inventorySlotId)
+			applyQualityColor(slotData.button, itemLink)
 		end
 	end
 end
 
 -- Handle inspect events
-local function onInspectEvent(_, event, unitId)
+local function onInspectEvent(_, event)
 	if event == "INSPECT_READY" then
-		_C_Timer.After(0.01, updateAllInspectEquipmentSlots)
-	elseif event == "UNIT_INVENTORY_CHANGED" and unitId == "target" then
-		updateAllInspectEquipmentSlots()
+		_C_Timer.After(0.1, updateAllInspectSlots)
 	end
 end
 
@@ -49,9 +47,8 @@ local eventFrame = _CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_InspectUI" then
-		initializeInspectCache()
+		initializeCache()
 		eventFrame:RegisterEvent("INSPECT_READY")
-		eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 		eventFrame:SetScript("OnEvent", onInspectEvent)
 		self:UnregisterEvent("ADDON_LOADED")
 	end
