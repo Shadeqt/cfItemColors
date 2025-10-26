@@ -1,43 +1,40 @@
 local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache API calls
+-- WoW API calls
 local _GetTradeSkillSelectionIndex = GetTradeSkillSelectionIndex
 local _GetTradeSkillReagentItemLink = GetTradeSkillReagentItemLink
 local _GetTradeSkillItemLink = GetTradeSkillItemLink
 local _CreateFrame = CreateFrame
-local _G = _G
 
 -- Constants
 local NUM_REAGENT_SLOTS = 8
 
--- Cache button references
-local craftedItemButton = nil
+-- Cache tradeskill button references
 local reagentButtonCache = {}
+local craftedItemButton = nil
 
--- Initialize button cache
-local function initializeCache()
+-- Initialize tradeskill button cache
+local function initializeTradeSkillCache()
 	craftedItemButton = _G["TradeSkillSkillIcon"]
 	for i = 1, NUM_REAGENT_SLOTS do
 		reagentButtonCache[i] = _G["TradeSkillReagent" .. i]
 	end
 end
 
--- Update tradeskill items
+-- Apply quality colors to crafted item and reagents
 local function updateTradeSkillItems()
-	local selectedIndex = _GetTradeSkillSelectionIndex()
-	
-	-- Update crafted item
+	local selectedRecipeIndex = _GetTradeSkillSelectionIndex()
+
 	if craftedItemButton then
-		local itemLink = _GetTradeSkillItemLink(selectedIndex)
-		applyQualityColor(craftedItemButton, itemLink)
+		local craftedItemLink = _GetTradeSkillItemLink(selectedRecipeIndex)
+		applyQualityColor(craftedItemButton, craftedItemLink)
 	end
-	
-	-- Update reagents
+
 	for i = 1, NUM_REAGENT_SLOTS do
-		local button = reagentButtonCache[i]
-		if button then
-			local reagentLink = _GetTradeSkillReagentItemLink(selectedIndex, i)
-			applyQualityColor(button, reagentLink)
+		local reagentButton = reagentButtonCache[i]
+		if reagentButton then
+			local reagentItemLink = _GetTradeSkillReagentItemLink(selectedRecipeIndex, i)
+			applyQualityColor(reagentButton, reagentItemLink)
 		end
 	end
 end
@@ -47,7 +44,7 @@ local eventFrame = _CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_TradeSkillUI" then
-		initializeCache()
+		initializeTradeSkillCache()
 		hooksecurefunc("TradeSkillFrame_Update", updateTradeSkillItems)
 		self:UnregisterEvent("ADDON_LOADED")
 	end

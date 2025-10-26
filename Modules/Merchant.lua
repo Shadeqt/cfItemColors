@@ -1,64 +1,64 @@
-local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+local addon = cfItemColors
+local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
 
--- WoW API calls
+-- Cache API calls
 local _GetMerchantItemLink = GetMerchantItemLink
 local _GetBuybackItemLink = GetBuybackItemLink
 local _GetNumBuybackItems = GetNumBuybackItems
+local _hooksecurefunc = hooksecurefunc
+local _MerchantFrame = MerchantFrame
+local _G = _G
 
 -- Constants
-local MerchantFrame = MerchantFrame
 local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE
 local NUM_BUYBACK_SLOTS = 12
 
--- Cache merchant button references
+-- Cache button references
 local merchantButtonCache = {}
+local buybackButtonCache = {}
 local buybackPreviewButton = _G["MerchantBuyBackItemItemButton"]
 
+-- Initialize button caches
 for i = 1, MERCHANT_ITEMS_PER_PAGE do
 	merchantButtonCache[i] = _G["MerchantItem" .. i .. "ItemButton"]
 end
 
--- Apply quality colors to merchant tab items
-local function updateMerchantTabItems()
-	local currentPage = MerchantFrame.page or 1
+for i = 1, NUM_BUYBACK_SLOTS do
+	buybackButtonCache[i] = _G["MerchantItem" .. i .. "ItemButton"]
+end
+
+-- Update merchant tab items
+local function updateMerchantItems()
+	local currentPage = _MerchantFrame.page or 1
 	local pageOffset = (currentPage - 1) * MERCHANT_ITEMS_PER_PAGE
-
+	
 	for i = 1, MERCHANT_ITEMS_PER_PAGE do
-		local merchantItemButton = merchantButtonCache[i]
-		if merchantItemButton then
+		local button = merchantButtonCache[i]
+		if button then
 			local itemIndex = pageOffset + i
-			local merchantItemLink = _GetMerchantItemLink(itemIndex)
-			applyQualityColorWithQuestCheck(merchantItemButton, merchantItemLink)
+			local itemLink = _GetMerchantItemLink(itemIndex)
+			applyQualityColorWithQuestCheck(button, itemLink)
 		end
 	end
-
-	if not buybackPreviewButton then return end
-
-	local mostRecentBuybackLink = _GetBuybackItemLink(_GetNumBuybackItems())
-	applyQualityColorWithQuestCheck(buybackPreviewButton, mostRecentBuybackLink)
+	
+	-- Update buyback preview button
+	if buybackPreviewButton then
+		local buybackLink = _GetBuybackItemLink(_GetNumBuybackItems())
+		applyQualityColorWithQuestCheck(buybackPreviewButton, buybackLink)
+	end
 end
 
--- Apply quality colors to buyback tab items
-local function updateBuybackTabItems()
+-- Update buyback tab items
+local function updateBuybackItems()
 	for i = 1, NUM_BUYBACK_SLOTS do
-		local buybackItemButton = merchantButtonCache[i]
-		if buybackItemButton then
-			local buybackItemLink = _GetBuybackItemLink(i)
-			applyQualityColorWithQuestCheck(buybackItemButton, buybackItemLink)
+		local button = buybackButtonCache[i]
+		if button then
+			local itemLink = _GetBuybackItemLink(i)
+			applyQualityColorWithQuestCheck(button, itemLink)
 		end
 	end
 end
 
--- Hook merchant tab update
-hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
-	if MerchantFrame.selectedTab == 1 then
-		updateMerchantTabItems()
-	end
-end)
-
--- Hook buyback tab update
-hooksecurefunc("MerchantFrame_UpdateBuybackInfo", function()
-	if MerchantFrame.selectedTab == 2 then
-		updateBuybackTabItems()
-	end
-end)
+-- Hook merchant updates
+_hooksecurefunc("MerchantFrame_UpdateMerchantInfo", updateMerchantItems)
+_hooksecurefunc("MerchantFrame_UpdateBuybackInfo", updateBuybackItems)

@@ -1,5 +1,6 @@
 -- Main coloring function from parent module
-local applyQualityColor = cfItemColors.applyQualityColor
+local addon = cfItemColors
+local applyQualityColor = addon.applyQualityColor
 
 local EQUIPMENT_SLOTS = addon.EQUIPMENT_SLOTS
 
