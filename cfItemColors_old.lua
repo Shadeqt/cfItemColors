@@ -1,13 +1,11 @@
 cfItemColors = {}
 local addon = cfItemColors
 
--- Localize Lua and WoW API
-local _G = _G
+-- WoW API calls
 local _GetItemInfo = GetItemInfo
-local _BAG_ITEM_QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
 
 -- Quality color configuration
-local QUALITY_COLORS = _BAG_ITEM_QUALITY_COLORS
+local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
 QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0}
 
 -- Shared state
@@ -18,43 +16,39 @@ addon.EQUIPMENT_SLOTS = {
 
 addon.questObjectiveCache = {}
 
--- Quest items misclassified by WoW's item system
+-- Quest items that are misclassified by WoW's item system
+-- These items are quest-related but not marked as itemType="Quest" or itemClassId=12 and are not a Quest Objective either
 local MISCLASSIFIED_QUEST_ITEMS = {
 	["Kravel's Crate"] = true,
+	-- Add more misclassified quest items here as discovered
 }
 
--- Creates and configures a custom border texture for a button
+-- Create custom border texture for button
 local function createCustomBorder(button)
 	local customBorder = button:CreateTexture(nil, "OVERLAY")
 	customBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+	-- customBorder:SetTexCoord(0.25, 0.75, 0.25, 0.75)
 	customBorder:SetTexCoord(0.225, 0.775, 0.225, 0.775)
 	customBorder:SetBlendMode("ADD")
 	customBorder:SetAlpha(0.8)
-	
+
 	local buttonName = button:GetName()
 	local iconTexture = buttonName and _G[buttonName .. "IconTexture"]
 	customBorder:SetAllPoints(iconTexture or button)
+
 	customBorder:Hide()
 	return customBorder
 end
 
--- Hides border and clears cached item data
+-- Clear button border and cache
 local function clearButtonBorder(button)
 	button.customBorder:Hide()
 	button.cachedItemLink = nil
 	button.cachedQuality = nil
 end
 
--- Determines if an item is quest-related based on type, class, or cache
-local function isQuestItem(itemName, itemType, itemClassId)
-	return 	itemType == "Quest" or 
-			itemClassId == 12 or 
-			addon.questObjectiveCache[itemName] or 
-			MISCLASSIFIED_QUEST_ITEMS[itemName]
-end
-
 -- Core quality color application logic
-local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
+local function applyQualityColorInternal(button, itemIdOrLink, checkQuestObjectives)
 	-- Early exit if item hasn't changed
 	if button.cachedItemLink == itemIdOrLink then return end
 
@@ -69,13 +63,20 @@ local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
 		return
 	end
 
+	-- Get item info
 	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = _GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
-	-- Upgrade quest items to special quality
+	-- Determine quality level (with quest check if needed)
 	local qualityLevel = itemQuality
-	if checkQuestObjectives and itemQuality <= 1 and isQuestItem(itemName, itemType, itemClassId) then
-		qualityLevel = 99
+	if checkQuestObjectives then
+		local isQuestItem = itemQuality <= 1 and (
+			itemType == "Quest" or 
+			itemClassId == 12 or 
+			addon.questObjectiveCache[itemName] ~= nil or
+			MISCLASSIFIED_QUEST_ITEMS[itemName]
+		)
+		qualityLevel = isQuestItem and 99 or itemQuality
 	end
 
 	-- Early exit if effective quality unchanged
@@ -84,26 +85,26 @@ local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
 		return
 	end
 
-	-- Apply or hide border based on quality
+	-- Apply border color for quality 2+ items
 	if qualityLevel >= 2 then
-		local color = QUALITY_COLORS[qualityLevel]
-		button.customBorder:SetVertexColor(color.r, color.g, color.b)
+		local qualityColor = QUALITY_COLORS[qualityLevel]
+		button.customBorder:SetVertexColor(qualityColor.r, qualityColor.g, qualityColor.b)
 		button.customBorder:Show()
 	else
 		button.customBorder:Hide()
 	end
 
-	-- Cache results
+	-- Cache the item link and effective quality
 	button.cachedItemLink = itemIdOrLink
 	button.cachedQuality = qualityLevel
 end
 
--- Applies quality-colored border without quest detection
+-- Apply quality-colored border (no quest detection)
 function addon.applyQualityColor(button, itemIdOrLink)
-	applyQualityColor(button, itemIdOrLink, false)
+	applyQualityColorInternal(button, itemIdOrLink, false)
 end
 
--- Applies quality-colored border with quest item detection
+-- Apply quality-colored border with quest objective detection
 function addon.applyQualityColorWithQuestCheck(button, itemIdOrLink)
-	applyQualityColor(button, itemIdOrLink, true)
+	applyQualityColorInternal(button, itemIdOrLink, true)
 end
