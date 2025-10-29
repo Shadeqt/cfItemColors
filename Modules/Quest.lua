@@ -53,6 +53,10 @@ end
 -- Triggers when viewing quest details at NPC
 _hooksecurefunc("QuestInfo_Display", function()
 	updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem")
+	-- Retry after short delay for timing issues
+	C_Timer.After(0.1, function()
+		updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem")
+	end)
 end)
 
 -- Triggers when quest log refreshes
