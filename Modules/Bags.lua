@@ -1,3 +1,10 @@
+-- Early exit if bag addon detected
+local isActive, addonName = cfItemColors.IsBagAddonActive()
+if isActive then
+	print("cfItemColors: Bag addon detected (" .. addonName .. "), bag module disabled")
+	return
+end
+
 -- Main coloring function from parent module
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 

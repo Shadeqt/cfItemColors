@@ -23,6 +23,35 @@ local MISCLASSIFIED_QUEST_ITEMS = {
 	["Kravel's Crate"] = true,
 }
 
+-- Bag addon detection: Check if another bag addon is active
+function addon.IsBagAddonActive()
+	for i = 1, C_AddOns.GetNumAddOns() do
+		if C_AddOns.IsAddOnLoaded(i) then
+			local name = C_AddOns.GetAddOnInfo(i):lower()
+			local title = (C_AddOns.GetAddOnMetadata(i, "Title") or ""):lower()
+			local notes = (C_AddOns.GetAddOnMetadata(i, "Notes") or ""):lower()
+			local xnotes = (C_AddOns.GetAddOnMetadata(i, "X-Notes") or ""):lower()
+			local category = (C_AddOns.GetAddOnMetadata(i, "Category") or ""):lower()
+			local xcategory = (C_AddOns.GetAddOnMetadata(i, "X-Category") or ""):lower()
+
+			-- Check all metadata fields for bag-related keywords
+			local fields = {name, title, notes, xnotes, category, xcategory}
+			-- Bag addon detection keywords
+			local BAG_KEYWORDS = {"bag", "inventory"}
+			
+			for _, field in ipairs(fields) do
+				for _, keyword in ipairs(BAG_KEYWORDS) do
+					if field:find(keyword) then
+						return true, C_AddOns.GetAddOnInfo(i)
+					end
+				end
+			end
+		end
+	end
+
+	return false, nil
+end
+
 -- Creates and configures a custom border texture for a button
 local function createCustomBorder(button)
 	local customBorder = button:CreateTexture(nil, "OVERLAY")
