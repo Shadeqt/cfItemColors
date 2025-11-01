@@ -1,11 +1,13 @@
--- Constants
-local NUM_REAGENT_SLOTS = 8
+-- Shared dependencies
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache button references
+-- Module constants
+local NUM_REAGENT_SLOTS = 8 -- 8, maximum reagent slots in tradeskill window
+
+-- Module states
 local craftedItemButton = nil
 local reagentButtonCache = {}
 
--- Initialize button cache
 local function initializeCache()
 	craftedItemButton = _G["TradeSkillSkillIcon"]
 	for i = 1, NUM_REAGENT_SLOTS do
@@ -20,7 +22,7 @@ local function updateTradeSkillItems()
 	-- Update crafted item
 	if craftedItemButton then
 		local itemLink = GetTradeSkillItemLink(selectedIndex)
-		cfItemColors.applyQualityColor(craftedItemButton, itemLink)
+		applyQualityColor(craftedItemButton, itemLink)
 	end
 
 	-- Update reagents
@@ -28,7 +30,7 @@ local function updateTradeSkillItems()
 		local button = reagentButtonCache[i]
 		if button then
 			local reagentLink = GetTradeSkillReagentItemLink(selectedIndex, i)
-			cfItemColors.applyQualityColor(button, reagentLink)
+			applyQualityColor(button, reagentLink)
 		end
 	end
 end

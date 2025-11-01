@@ -1,14 +1,16 @@
--- WoW API Constants
-local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7 (inbox items per page)
-local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12 (max attachments when sending mail)
-local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16 (max attachments when receiving mail)
+-- Shared dependencies
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache button references
+-- WoW constants
+local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7, inbox items per page
+local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12, max attachments when sending mail
+local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16, max attachments when receiving mail
+
+-- Module states
 local inboxButtonCache = {}
 local sendMailButtonCache = {}
 local openMailButtonCache = {}
 
--- Initialize button caches
 for i = 1, INBOXITEMS_TO_DISPLAY do
 	inboxButtonCache[i] = _G["MailItem" .. i .. "Button"]
 end
@@ -21,7 +23,6 @@ for i = 1, ATTACHMENTS_MAX_RECEIVE do
 	openMailButtonCache[i] = _G["OpenMailAttachmentButton" .. i]
 end
 
--- Update inbox item colors
 local function updateInboxItems()
 	local numItems = GetInboxNumItems()
 	local pageOffset = ((InboxFrame and InboxFrame.pageNum or 1) - 1) * INBOXITEMS_TO_DISPLAY
@@ -44,9 +45,9 @@ local function updateInboxItems()
 					end
 				end
 
-				cfItemColors.applyQualityColor(button, bestItemLink)
+				applyQualityColor(button, bestItemLink)
 			else
-				cfItemColors.applyQualityColor(button, nil)
+				applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -58,7 +59,7 @@ local function updateSendMailItems()
 		local button = sendMailButtonCache[i]
 		if button then
 			local itemLink = GetSendMailItemLink(i)
-			cfItemColors.applyQualityColor(button, itemLink)
+			applyQualityColor(button, itemLink)
 		end
 	end
 end
@@ -74,7 +75,7 @@ local function updateOpenMailItems()
 		local button = openMailButtonCache[i]
 		if button then
 			local itemLink = GetInboxItemLink(mailId, i)
-			cfItemColors.applyQualityColor(button, itemLink)
+			applyQualityColor(button, itemLink)
 		end
 	end
 end
@@ -84,21 +85,21 @@ local function clearAllMailboxColors()
 	for i = 1, INBOXITEMS_TO_DISPLAY do
 		local button = inboxButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 
 	for i = 1, ATTACHMENTS_MAX_SEND do
 		local button = sendMailButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
 		local button = openMailButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 end

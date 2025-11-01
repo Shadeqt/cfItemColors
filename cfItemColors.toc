@@ -1,6 +1,6 @@
 ## Interface: 11508
 ## Title:     cfItemColors
-## Notes:     Optimized item border coloring with localized APIs, caching, and throttling
+## Notes:     Adds quality-colored borders to items based on rarity
 ## Author:    Cowfoot
 ## Version:   1.0
 
@@ -8,7 +8,7 @@
 cfItemColors.lua
 
 # Domain modules
-Modules\AuctionHouse.lua
+#Modules\AuctionHouse.lua
 Modules\Bags.lua
 Modules\Bank.lua
 Modules\Character.lua

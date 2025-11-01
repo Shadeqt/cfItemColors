@@ -1,10 +1,12 @@
--- Apply quality color to a single loot slot button
+-- Shared dependencies
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+
 local function updateLootSlotButton(slotIndex)
 	local lootSlotButton = _G["LootButton" .. slotIndex]
 	if not lootSlotButton then return end
 
 	local lootItemLink = GetLootSlotLink(slotIndex)
-	cfItemColors.applyQualityColorWithQuestCheck(lootSlotButton, lootItemLink)
+	applyQualityColorWithQuestCheck(lootSlotButton, lootItemLink)
 end
 
 -- Hook loot button updates

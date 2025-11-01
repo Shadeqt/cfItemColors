@@ -1,13 +1,13 @@
--- Main coloring function from parent module
+-- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache equipment slot button references to avoid repeated _G lookups
+-- Module states
 local equipmentSlotButtonCache = {}
 for i = 1, #EQUIPMENT_SLOTS do
 	equipmentSlotButtonCache[i] = _G["Character" .. EQUIPMENT_SLOTS[i] .. "Slot"]
 end
 
--- Updates a single equipment slot with quality color
 local function updateSingleEquipmentSlot(slotId)
 	if slotId < 1 or slotId > 19 then return end
 
@@ -15,7 +15,7 @@ local function updateSingleEquipmentSlot(slotId)
 	if not equipmentButton then return end
 
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
-	cfItemColors.applyQualityColor(equipmentButton, inventoryItemLink)
+	applyQualityColor(equipmentButton, inventoryItemLink)
 end
 
 -- Updates all equipment slots with quality colors

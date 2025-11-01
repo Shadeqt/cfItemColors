@@ -1,23 +1,24 @@
--- Early exit if bag addon detected
 local isActive, addonName = cfItemColors.IsBagAddonActive()
 if isActive then
 	print("cfItemColors: Bag addon detected (" .. addonName .. "), bank module disabled")
 	return
 end
 
--- WoW API Constants
-local BANK_CONTAINER = BANK_CONTAINER -- -1 (bank container Id)
+-- Shared dependencies
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- Module Constants
-local NUM_BANK_SLOTS = 24
+-- WoW constants
+local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main bank storage
 
--- Cache bank slot button references to avoid repeated _G lookups
+-- Module constants
+local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes bag slots)
+
+-- Module states
 local bankSlotButtonCache = {}
 for i = 1, NUM_BANK_SLOTS do
 	bankSlotButtonCache[i] = _G["BankFrameItem" .. i]
 end
 
--- Updates a single bank container slot with quality color
 local function updateSingleBankSlot(slotId)
 	if slotId < 1 or slotId > NUM_BANK_SLOTS then return end
 
@@ -25,7 +26,7 @@ local function updateSingleBankSlot(slotId)
 	if not bankSlotButton then return end
 
 	local containerItemId = C_Container.GetContainerItemId(BANK_CONTAINER, slotId)
-	cfItemColors.applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
+	applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
 end
 
 -- Updates all bank container slots with quality colors

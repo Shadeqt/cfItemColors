@@ -1,15 +1,17 @@
--- WoW API Constants
-local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10 (merchant items displayed per page)
+-- Shared dependencies
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- Module Constants
-local NUM_BUYBACK_SLOTS = 12
+-- WoW constants
+local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10, items displayed per merchant page
 
--- Cache button references
+-- Module constants
+local NUM_BUYBACK_SLOTS = 12 -- 12, maximum buyback history slots at vendors
+
+-- Module states
 local merchantButtonCache = {}
 local buybackButtonCache = {}
 local buybackPreviewButton = _G["MerchantBuyBackItemItemButton"]
 
--- Initialize button caches
 for i = 1, MERCHANT_ITEMS_PER_PAGE do
 	merchantButtonCache[i] = _G["MerchantItem" .. i .. "ItemButton"]
 end
@@ -18,7 +20,6 @@ for i = 1, NUM_BUYBACK_SLOTS do
 	buybackButtonCache[i] = _G["MerchantItem" .. i .. "ItemButton"]
 end
 
--- Update merchant tab items
 local function updateMerchantItems()
 	local currentPage = MerchantFrame.page or 1
 	local pageOffset = (currentPage - 1) * MERCHANT_ITEMS_PER_PAGE
@@ -28,14 +29,14 @@ local function updateMerchantItems()
 		if button then
 			local itemIndex = pageOffset + i
 			local itemLink = GetMerchantItemLink(itemIndex)
-			cfItemColors.applyQualityColorWithQuestCheck(button, itemLink)
+			applyQualityColorWithQuestCheck(button, itemLink)
 		end
 	end
 
 	-- Update buyback preview button
 	if buybackPreviewButton then
 		local buybackLink = GetBuybackItemLink(GetNumBuybackItems())
-		cfItemColors.applyQualityColorWithQuestCheck(buybackPreviewButton, buybackLink)
+		applyQualityColorWithQuestCheck(buybackPreviewButton, buybackLink)
 	end
 end
 
@@ -45,7 +46,7 @@ local function updateBuybackItems()
 		local button = buybackButtonCache[i]
 		if button then
 			local itemLink = GetBuybackItemLink(i)
-			cfItemColors.applyQualityColorWithQuestCheck(button, itemLink)
+			applyQualityColorWithQuestCheck(button, itemLink)
 		end
 	end
 end

@@ -1,15 +1,17 @@
--- WoW API Constants
-local NUM_BROWSE_TO_DISPLAY = NUM_BROWSE_TO_DISPLAY -- 8 (browse tab items per page)
-local NUM_BIDS_TO_DISPLAY = NUM_BIDS_TO_DISPLAY -- 8 (bids tab items per page)
-local NUM_AUCTIONS_TO_DISPLAY = NUM_AUCTIONS_TO_DISPLAY -- 8 (auctions tab items per page)
+-- Shared dependencies
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache button references for all three tabs
+-- WoW constants
+local NUM_BROWSE_TO_DISPLAY = NUM_BROWSE_TO_DISPLAY -- 8, browse tab items per page
+local NUM_BIDS_TO_DISPLAY = NUM_BIDS_TO_DISPLAY -- 8, bids tab items per page
+local NUM_AUCTIONS_TO_DISPLAY = NUM_AUCTIONS_TO_DISPLAY -- 8, auctions tab items per page
+
+-- Module states
 local browseButtonCache = {}
 local bidButtonCache = {}
 local auctionButtonCache = {}
 local sellItemButton = nil
 
--- Initialize button caches
 for i = 1, (NUM_BROWSE_TO_DISPLAY or 8) do
 	browseButtonCache[i] = _G["BrowseButton" .. i]
 end
@@ -22,10 +24,11 @@ for i = 1, (NUM_AUCTIONS_TO_DISPLAY or 8) do
 	auctionButtonCache[i] = _G["AuctionsButton" .. i]
 end
 
--- Sell item button (on Auctions tab)
 sellItemButton = _G["AuctionsItemButton"]
 
--- Update browse tab item colors
+local lastListUpdate = 0
+local DEBOUNCE_DELAY = 0.5
+
 local function updateBrowseItems()
 	local numItems = GetNumAuctionItems("list")
 
@@ -34,9 +37,9 @@ local function updateBrowseItems()
 		if button then
 			if i <= numItems then
 				local itemLink = GetAuctionItemLink("list", i)
-				cfItemColors.applyQualityColor(button, itemLink)
+				applyQualityColor(button, itemLink)
 			else
-				cfItemColors.applyQualityColor(button, nil)
+				applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -51,9 +54,9 @@ local function updateBidItems()
 		if button then
 			if i <= numItems then
 				local itemLink = GetAuctionItemLink("bidder", i)
-				cfItemColors.applyQualityColor(button, itemLink)
+				applyQualityColor(button, itemLink)
 			else
-				cfItemColors.applyQualityColor(button, nil)
+				applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -68,9 +71,9 @@ local function updateAuctionItems()
 		if button then
 			if i <= numItems then
 				local itemLink = GetAuctionItemLink("owner", i)
-				cfItemColors.applyQualityColor(button, itemLink)
+				applyQualityColor(button, itemLink)
 			else
-				cfItemColors.applyQualityColor(button, nil)
+				applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -82,9 +85,9 @@ local function updateSellItem()
 		local name, texture, count, quality, canUse, price = GetAuctionSellItemInfo()
 		if name and quality then
 			-- Create a simple item reference using the name for the color system
-			cfItemColors.applyQualityColor(sellItemButton, name)
+			applyQualityColor(sellItemButton, name)
 		else
-			cfItemColors.applyQualityColor(sellItemButton, nil)
+			applyQualityColor(sellItemButton, nil)
 		end
 	end
 end
@@ -95,7 +98,7 @@ local function clearAllAuctionHouseColors()
 	for i = 1, (NUM_BROWSE_TO_DISPLAY or 8) do
 		local button = browseButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 
@@ -103,7 +106,7 @@ local function clearAllAuctionHouseColors()
 	for i = 1, (NUM_BIDS_TO_DISPLAY or 8) do
 		local button = bidButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 
@@ -111,30 +114,22 @@ local function clearAllAuctionHouseColors()
 	for i = 1, (NUM_AUCTIONS_TO_DISPLAY or 8) do
 		local button = auctionButtonCache[i]
 		if button then
-			cfItemColors.applyQualityColor(button, nil)
+			applyQualityColor(button, nil)
 		end
 	end
 
 	-- Clear sell item
 	if sellItemButton then
-		cfItemColors.applyQualityColor(sellItemButton, nil)
+		applyQualityColor(sellItemButton, nil)
 	end
 end
 
--- Event frame for auction house monitoring
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("AUCTION_HOUSE_SHOW")
 eventFrame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
 eventFrame:RegisterEvent("AUCTION_BIDDER_LIST_UPDATE")
 eventFrame:RegisterEvent("AUCTION_OWNED_LIST_UPDATE")
 eventFrame:RegisterEvent("NEW_AUCTION_UPDATE")
-
-
--- Debounce timer for AUCTION_ITEM_LIST_UPDATE spam
-local lastListUpdate = 0
-local DEBOUNCE_DELAY = 0.5
-
--- Handle auction house events
 eventFrame:SetScript("OnEvent", function(_, event)
 	if event == "AUCTION_HOUSE_SHOW" then
 		-- Auction house opened - update all tabs

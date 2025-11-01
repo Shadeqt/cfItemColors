@@ -1,18 +1,19 @@
--- Early exit if bag addon detected
 local isActive, addonName = cfItemColors.IsBagAddonActive()
 if isActive then
 	print("cfItemColors: Bag addon detected (" .. addonName .. "), bag module disabled")
 	return
 end
 
--- WoW API Constants
-local NUM_BAG_SLOTS = NUM_BAG_SLOTS -- 4 (main bag slots, excludes backpack)
-local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS -- 7 (bank bag slots)
+-- Shared dependencies
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
--- Module Constants
-local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS
+-- WoW constants
+local NUM_BAG_SLOTS = NUM_BAG_SLOTS -- 4, player bag slots (excludes backpack slot 0)
+local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS -- 7, bank bag slots (bags 5-11)
 
--- Updates all item buttons in a single bag with quality colors
+-- Module constants
+local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS -- 11, combined total bag slots (4 player + 7 bank)
+
 local function updateSingleBagColors(bagId)
 	if bagId < 0 or bagId > NUM_BAG_BANK_SLOTS then return end
 
@@ -28,7 +29,7 @@ local function updateSingleBagColors(bagId)
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetId()
 			local containerItemId = C_Container.GetContainerItemId(bagId, bagItemButtonId)
-			cfItemColors.applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
+			applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
 		end
 	end
 end

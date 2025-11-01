@@ -1,25 +1,24 @@
 cfItemColors = {}
-local addon = cfItemColors
 
--- Quality color configuration
-local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
-QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0}
-
--- Shared state
-addon.EQUIPMENT_SLOTS = {
+-- Shared dependencies
+cfItemColors.EQUIPMENT_SLOTS = {
 	"Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrist", "Hands",
 	"Finger0", "Finger1", "Trinket0", "Trinket1", "Back", "MainHand", "SecondaryHand", "Ranged", "Tabard", "Ammo"
 }
 
-addon.questObjectiveCache = {}
+cfItemColors.questObjectiveCache = {}
 
--- Quest items misclassified by WoW's item system
+-- Module states
+local questObjectiveCache = cfItemColors.questObjectiveCache
+
+local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
+QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0}
+
 local MISCLASSIFIED_QUEST_ITEMS = {
 	["Kravel's Crate"] = true,
 }
 
--- Bag addon detection: Check if another bag addon is active
-function addon.IsBagAddonActive()
+function cfItemColors.IsBagAddonActive()
 	for i = 1, C_AddOns.GetNumAddOns() do
 		if C_AddOns.IsAddOnLoaded(i) then
 			local name = C_AddOns.GetAddOnInfo(i):lower()
@@ -33,7 +32,7 @@ function addon.IsBagAddonActive()
 			local fields = {name, title, notes, xnotes, category, xcategory}
 			-- Bag addon detection keywords
 			local BAG_KEYWORDS = {"bag", "inventory"}
-			
+
 			for _, field in ipairs(fields) do
 				for _, keyword in ipairs(BAG_KEYWORDS) do
 					if field:find(keyword) then
@@ -71,14 +70,14 @@ end
 
 -- Determines if an item is quest-related based on type, class, or cache
 local function isQuestItem(itemName, itemType, itemClassId)
-	return 	itemType == "Quest" or 
-			itemClassId == 12 or 
-			addon.questObjectiveCache[itemName] or 
+	return 	itemType == "Quest" or
+			itemClassId == 12 or
+			questObjectiveCache[itemName] or
 			MISCLASSIFIED_QUEST_ITEMS[itemName]
 end
 
 -- Core quality color application logic
-local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
+local function applyQualityColor(button, itemIdOrLink, checkQuestItems)
 	-- Early exit if item hasn't changed
 	if button.cachedItemLink == itemIdOrLink then return end
 
@@ -98,7 +97,7 @@ local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
 
 	-- Upgrade quest items to special quality
 	local qualityLevel = itemQuality
-	if checkQuestObjectives and itemQuality <= 1 and isQuestItem(itemName, itemType, itemClassId) then
+	if checkQuestItems and itemQuality <= 1 and isQuestItem(itemName, itemType, itemClassId) then
 		qualityLevel = 99
 	end
 
@@ -123,11 +122,13 @@ local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
 end
 
 -- Applies quality-colored border without quest detection
-function addon.applyQualityColor(button, itemIdOrLink)
-	applyQualityColor(button, itemIdOrLink, false)
+function cfItemColors.applyQualityColor(button, itemIdOrLink)
+	local checkQuestItems = false
+	applyQualityColor(button, itemIdOrLink, checkQuestItems)
 end
 
 -- Applies quality-colored border with quest item detection
-function addon.applyQualityColorWithQuestCheck(button, itemIdOrLink)
-	applyQualityColor(button, itemIdOrLink, true)
+function cfItemColors.applyQualityColorWithQuestCheck(button, itemIdOrLink)
+	local checkQuestItems = true
+	applyQualityColor(button, itemIdOrLink, checkQuestItems)
 end

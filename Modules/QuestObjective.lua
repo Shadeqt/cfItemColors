@@ -1,4 +1,6 @@
--- Extract quest item names from a single quest
+-- Shared dependencies
+local questObjectiveCache = cfItemColors.questObjectiveCache
+
 local function extractQuestItems(questLogIndex)
 	local items = {}
 
@@ -33,22 +35,22 @@ end
 local function addQuestItems(questLogIndex, questId)
 	local items = extractQuestItems(questLogIndex)
 	for itemName in pairs(items) do
-		cfItemColors.questObjectiveCache[itemName] = questId
+		questObjectiveCache[itemName] = questId
 	end
 end
 
 -- Remove quest items from cache
 local function removeQuestItems(questId)
-	for itemName, ownerId in pairs(cfItemColors.questObjectiveCache) do
+	for itemName, ownerId in pairs(questObjectiveCache) do
 		if ownerId == questId then
-			cfItemColors.questObjectiveCache[itemName] = nil
+			questObjectiveCache[itemName] = nil
 		end
 	end
 end
 
 -- Rebuild entire cache
 local function rebuildCache()
-	wipe(cfItemColors.questObjectiveCache)
+	wipe(questObjectiveCache)
 
 	local numQuests = GetNumQuestLogEntries()
 	for i = 1, numQuests do

@@ -1,22 +1,23 @@
--- WoW API Constants
-local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 6 (trade slots per player)
+-- Shared dependencies
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache button references for both players
+-- WoW constants
+local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 6, trade slots per player
+
+-- Module states
 local playerTradeButtons = {}
 local targetTradeButtons = {}
 
--- Initialize button caches
 for i = 1, MAX_TRADE_ITEMS do
 	playerTradeButtons[i] = _G["TradePlayerItem" .. i .. "ItemButton"]
 	targetTradeButtons[i] = _G["TradeRecipientItem" .. i .. "ItemButton"]
 end
 
--- Update player's trade slot colors
 local function updatePlayerTradeSlot(slotIndex)
 	local button = playerTradeButtons[slotIndex]
 	if button then
 		local itemLink = GetTradePlayerItemLink(slotIndex)
-		cfItemColors.applyQualityColor(button, itemLink)
+		applyQualityColor(button, itemLink)
 	end
 end
 
@@ -25,7 +26,7 @@ local function updateTargetTradeSlot(slotIndex)
 	local button = targetTradeButtons[slotIndex]
 	if button then
 		local itemLink = GetTradeTargetItemLink(slotIndex)
-		cfItemColors.applyQualityColor(button, itemLink)
+		applyQualityColor(button, itemLink)
 	end
 end
 
@@ -44,22 +45,18 @@ local function clearAllTradeSlots()
 		local targetButton = targetTradeButtons[i]
 
 		if playerButton then
-			cfItemColors.applyQualityColor(playerButton, nil)
+			applyQualityColor(playerButton, nil)
 		end
 		if targetButton then
-			cfItemColors.applyQualityColor(targetButton, nil)
+			applyQualityColor(targetButton, nil)
 		end
 	end
 end
 
--- Event frame for trade window monitoring
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("TRADE_SHOW")
 eventFrame:RegisterEvent("TRADE_PLAYER_ITEM_CHANGED")
 eventFrame:RegisterEvent("TRADE_TARGET_ITEM_CHANGED")
-
-
--- Handle trade events
 eventFrame:SetScript("OnEvent", function(_, event, slotIndex)
 	if event == "TRADE_SHOW" then
 		-- Trade window opened - update all slots

@@ -1,4 +1,7 @@
--- Update quest reward buttons (both quest log and NPC dialog)
+-- Shared dependencies
+local applyQualityColor = cfItemColors.applyQualityColor
+local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+
 local function updateQuestRewards(buttonPrefix)
 	local isQuestLog = QuestLogFrame and QuestLogFrame:IsVisible()
 
@@ -17,7 +20,7 @@ local function updateQuestRewards(buttonPrefix)
 			else
 				itemLink = getItemLink("reward", i - numChoices)
 			end
-			cfItemColors.applyQualityColor(button, itemLink)
+			applyQualityColor(button, itemLink)
 		end
 	end
 end
@@ -29,7 +32,7 @@ local function updateQuestRequiredItems()
 		local button = _G["QuestProgressItem" .. i]
 		if button then
 			local itemLink = GetQuestItemLink("required", i)
-			cfItemColors.applyQualityColorWithQuestCheck(button, itemLink)
+			applyQualityColorWithQuestCheck(button, itemLink)
 		end
 	end
 end

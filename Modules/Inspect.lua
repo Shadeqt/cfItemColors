@@ -1,9 +1,10 @@
+-- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
+local applyQualityColor = cfItemColors.applyQualityColor
 
--- Cache slot data
+-- Module states
 local inspectSlotCache = {}
 
--- Initialize cache
 local function initializeCache()
 	for i = 1, #EQUIPMENT_SLOTS do
 		local slotName = EQUIPMENT_SLOTS[i]
@@ -20,7 +21,7 @@ local function updateAllInspectSlots()
 		local slotData = inspectSlotCache[i]
 		if slotData and slotData.button then
 			local itemLink = GetInventoryItemLink("target", slotData.inventorySlotId)
-			cfItemColors.applyQualityColor(slotData.button, itemLink)
+			applyQualityColor(slotData.button, itemLink)
 		end
 	end
 end
