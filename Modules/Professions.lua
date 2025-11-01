@@ -1,12 +1,3 @@
-local applyQualityColor = cfItemColors.applyQualityColor
-
--- Cache API calls
-local _GetTradeSkillSelectionIndex = GetTradeSkillSelectionIndex
-local _GetTradeSkillReagentItemLink = GetTradeSkillReagentItemLink
-local _GetTradeSkillItemLink = GetTradeSkillItemLink
-local _CreateFrame = CreateFrame
-local _G = _G
-
 -- Constants
 local NUM_REAGENT_SLOTS = 8
 
@@ -24,26 +15,26 @@ end
 
 -- Update tradeskill items
 local function updateTradeSkillItems()
-	local selectedIndex = _GetTradeSkillSelectionIndex()
-	
+	local selectedIndex = GetTradeSkillSelectionIndex()
+
 	-- Update crafted item
 	if craftedItemButton then
-		local itemLink = _GetTradeSkillItemLink(selectedIndex)
-		applyQualityColor(craftedItemButton, itemLink)
+		local itemLink = GetTradeSkillItemLink(selectedIndex)
+		cfItemColors.applyQualityColor(craftedItemButton, itemLink)
 	end
-	
+
 	-- Update reagents
 	for i = 1, NUM_REAGENT_SLOTS do
 		local button = reagentButtonCache[i]
 		if button then
-			local reagentLink = _GetTradeSkillReagentItemLink(selectedIndex, i)
-			applyQualityColor(button, reagentLink)
+			local reagentLink = GetTradeSkillReagentItemLink(selectedIndex, i)
+			cfItemColors.applyQualityColor(button, reagentLink)
 		end
 	end
 end
 
 -- Wait for Blizzard_TradeSkillUI to load
-local eventFrame = _CreateFrame("Frame")
+local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_TradeSkillUI" then

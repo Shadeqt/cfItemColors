@@ -1,13 +1,8 @@
 cfItemColors = {}
 local addon = cfItemColors
 
--- Localize Lua and WoW API
-local _G = _G
-local _GetItemInfo = GetItemInfo
-local _BAG_ITEM_QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
-
 -- Quality color configuration
-local QUALITY_COLORS = _BAG_ITEM_QUALITY_COLORS
+local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
 QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0}
 
 -- Shared state
@@ -59,7 +54,7 @@ local function createCustomBorder(button)
 	customBorder:SetTexCoord(0.225, 0.775, 0.225, 0.775)
 	customBorder:SetBlendMode("ADD")
 	customBorder:SetAlpha(0.8)
-	
+
 	local buttonName = button:GetName()
 	local iconTexture = buttonName and _G[buttonName .. "IconTexture"]
 	customBorder:SetAllPoints(iconTexture or button)
@@ -98,7 +93,7 @@ local function applyQualityColor(button, itemIdOrLink, checkQuestObjectives)
 		return
 	end
 
-	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = _GetItemInfo(itemIdOrLink)
+	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
 	-- Upgrade quest items to special quality

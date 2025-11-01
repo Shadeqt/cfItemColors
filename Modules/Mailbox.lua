@@ -1,19 +1,7 @@
-local addon = cfItemColors
-local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
-
--- Cache API calls for performance
-local _GetInboxItem = GetInboxItem
-local _GetInboxItemLink = GetInboxItemLink
-local _GetSendMailItem = GetSendMailItem
-local _GetSendMailItemLink = GetSendMailItemLink
-local _GetInboxNumItems = GetInboxNumItems
-local _CreateFrame = CreateFrame
-local _G = _G
-
--- WoW Constants
-local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- Number of mail items shown per inbox page (7)
-local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- Max attachments when sending mail (12)
-local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- Max attachments when receiving mail (16)
+-- WoW API Constants
+local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7 (inbox items per page)
+local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12 (max attachments when sending mail)
+local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16 (max attachments when receiving mail)
 
 -- Cache button references
 local inboxButtonCache = {}
@@ -35,9 +23,9 @@ end
 
 -- Update inbox item colors
 local function updateInboxItems()
-	local numItems = _GetInboxNumItems()
+	local numItems = GetInboxNumItems()
 	local pageOffset = ((InboxFrame and InboxFrame.pageNum or 1) - 1) * INBOXITEMS_TO_DISPLAY
-	
+
 	for i = 1, INBOXITEMS_TO_DISPLAY do
 		local button = inboxButtonCache[i]
 		if button then
@@ -46,19 +34,19 @@ local function updateInboxItems()
 				-- Find highest quality item in this mail
 				local bestItemLink = nil
 				local bestQuality = -1
-				
+
 				-- Check all possible attachments in this mail
-				for attachIndex = 1, ATTACHMENTS_MAX_RECEIVE do
-					local name, itemTexture, count, quality, canUse = _GetInboxItem(mailIndex, attachIndex)
+				for j = 1, ATTACHMENTS_MAX_RECEIVE do
+					local name, itemTexture, count, quality, canUse = GetInboxItem(mailIndex, j)
 					if name and quality and quality > bestQuality then
 						bestQuality = quality
-						bestItemLink = _GetInboxItemLink(mailIndex, attachIndex)
+						bestItemLink = GetInboxItemLink(mailIndex, j)
 					end
 				end
-				
-				applyQualityColorWithQuestCheck(button, bestItemLink)
+
+				cfItemColors.applyQualityColor(button, bestItemLink)
 			else
-				applyQualityColorWithQuestCheck(button, nil)
+				cfItemColors.applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -69,24 +57,24 @@ local function updateSendMailItems()
 	for i = 1, ATTACHMENTS_MAX_SEND do
 		local button = sendMailButtonCache[i]
 		if button then
-			local itemLink = _GetSendMailItemLink(i)
-			applyQualityColorWithQuestCheck(button, itemLink)
+			local itemLink = GetSendMailItemLink(i)
+			cfItemColors.applyQualityColor(button, itemLink)
 		end
 	end
 end
 
 -- Update open mail attachment colors
 local function updateOpenMailItems()
-	if not InboxFrame or not InboxFrame.openMailID then
+	if not InboxFrame or not InboxFrame.openMailId then
 		return
 	end
-	
-	local mailID = InboxFrame.openMailID
+
+	local mailId = InboxFrame.openMailId
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
 		local button = openMailButtonCache[i]
 		if button then
-			local itemLink = _GetInboxItemLink(mailID, i)
-			applyQualityColorWithQuestCheck(button, itemLink)
+			local itemLink = GetInboxItemLink(mailId, i)
+			cfItemColors.applyQualityColor(button, itemLink)
 		end
 	end
 end
@@ -96,27 +84,27 @@ local function clearAllMailboxColors()
 	for i = 1, INBOXITEMS_TO_DISPLAY do
 		local button = inboxButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
-	
+
 	for i = 1, ATTACHMENTS_MAX_SEND do
 		local button = sendMailButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
-	
+
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
 		local button = openMailButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
 end
 
 -- Event frame for mailbox monitoring
-local eventFrame = _CreateFrame("Frame")
+local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("MAIL_SHOW")
 eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
 eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
@@ -174,7 +162,7 @@ end
 if OpenMailFrame then
 	hookOpenMailFrame()
 else
-	local hookFrame = _CreateFrame("Frame")
+	local hookFrame = CreateFrame("Frame")
 	hookFrame:RegisterEvent("ADDON_LOADED")
 	hookFrame:SetScript("OnEvent", function(_, event, addonName)
 		if OpenMailFrame then

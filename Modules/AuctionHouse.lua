@@ -1,17 +1,7 @@
-local addon = cfItemColors
-local applyQualityColorWithQuestCheck = addon.applyQualityColorWithQuestCheck
-
--- Cache API calls for performance
-local _GetNumAuctionItems = GetNumAuctionItems
-local _GetAuctionItemLink = GetAuctionItemLink
-local _GetAuctionSellItemInfo = GetAuctionSellItemInfo
-local _CreateFrame = CreateFrame
-local _G = _G
-
--- Constants
-local NUM_BROWSE_TO_DISPLAY = NUM_BROWSE_TO_DISPLAY or 8
-local NUM_BIDS_TO_DISPLAY = NUM_BIDS_TO_DISPLAY or 8
-local NUM_AUCTIONS_TO_DISPLAY = NUM_AUCTIONS_TO_DISPLAY or 8
+-- WoW API Constants
+local NUM_BROWSE_TO_DISPLAY = NUM_BROWSE_TO_DISPLAY -- 8 (browse tab items per page)
+local NUM_BIDS_TO_DISPLAY = NUM_BIDS_TO_DISPLAY -- 8 (bids tab items per page)
+local NUM_AUCTIONS_TO_DISPLAY = NUM_AUCTIONS_TO_DISPLAY -- 8 (auctions tab items per page)
 
 -- Cache button references for all three tabs
 local browseButtonCache = {}
@@ -20,15 +10,15 @@ local auctionButtonCache = {}
 local sellItemButton = nil
 
 -- Initialize button caches
-for i = 1, NUM_BROWSE_TO_DISPLAY do
+for i = 1, (NUM_BROWSE_TO_DISPLAY or 8) do
 	browseButtonCache[i] = _G["BrowseButton" .. i]
 end
 
-for i = 1, NUM_BIDS_TO_DISPLAY do
+for i = 1, (NUM_BIDS_TO_DISPLAY or 8) do
 	bidButtonCache[i] = _G["BidButton" .. i]
 end
 
-for i = 1, NUM_AUCTIONS_TO_DISPLAY do
+for i = 1, (NUM_AUCTIONS_TO_DISPLAY or 8) do
 	auctionButtonCache[i] = _G["AuctionsButton" .. i]
 end
 
@@ -37,16 +27,16 @@ sellItemButton = _G["AuctionsItemButton"]
 
 -- Update browse tab item colors
 local function updateBrowseItems()
-	local numItems = _GetNumAuctionItems("list")
-	
-	for i = 1, NUM_BROWSE_TO_DISPLAY do
+	local numItems = GetNumAuctionItems("list")
+
+	for i = 1, (NUM_BROWSE_TO_DISPLAY or 8) do
 		local button = browseButtonCache[i]
 		if button then
 			if i <= numItems then
-				local itemLink = _GetAuctionItemLink("list", i)
-				applyQualityColorWithQuestCheck(button, itemLink)
+				local itemLink = GetAuctionItemLink("list", i)
+				cfItemColors.applyQualityColor(button, itemLink)
 			else
-				applyQualityColorWithQuestCheck(button, nil)
+				cfItemColors.applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -54,16 +44,16 @@ end
 
 -- Update bids tab item colors
 local function updateBidItems()
-	local numItems = _GetNumAuctionItems("bidder")
-	
-	for i = 1, NUM_BIDS_TO_DISPLAY do
+	local numItems = GetNumAuctionItems("bidder")
+
+	for i = 1, (NUM_BIDS_TO_DISPLAY or 8) do
 		local button = bidButtonCache[i]
 		if button then
 			if i <= numItems then
-				local itemLink = _GetAuctionItemLink("bidder", i)
-				applyQualityColorWithQuestCheck(button, itemLink)
+				local itemLink = GetAuctionItemLink("bidder", i)
+				cfItemColors.applyQualityColor(button, itemLink)
 			else
-				applyQualityColorWithQuestCheck(button, nil)
+				cfItemColors.applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -71,16 +61,16 @@ end
 
 -- Update auctions tab item colors
 local function updateAuctionItems()
-	local numItems = _GetNumAuctionItems("owner")
-	
-	for i = 1, NUM_AUCTIONS_TO_DISPLAY do
+	local numItems = GetNumAuctionItems("owner")
+
+	for i = 1, (NUM_AUCTIONS_TO_DISPLAY or 8) do
 		local button = auctionButtonCache[i]
 		if button then
 			if i <= numItems then
-				local itemLink = _GetAuctionItemLink("owner", i)
-				applyQualityColorWithQuestCheck(button, itemLink)
+				local itemLink = GetAuctionItemLink("owner", i)
+				cfItemColors.applyQualityColor(button, itemLink)
 			else
-				applyQualityColorWithQuestCheck(button, nil)
+				cfItemColors.applyQualityColor(button, nil)
 			end
 		end
 	end
@@ -89,13 +79,12 @@ end
 -- Update sell item slot color
 local function updateSellItem()
 	if sellItemButton then
-		local name, texture, count, quality, canUse, price = _GetAuctionSellItemInfo()
+		local name, texture, count, quality, canUse, price = GetAuctionSellItemInfo()
 		if name and quality then
 			-- Create a simple item reference using the name for the color system
-			-- The applyQualityColorWithQuestCheck function can handle item names
-			applyQualityColorWithQuestCheck(sellItemButton, name)
+			cfItemColors.applyQualityColor(sellItemButton, name)
 		else
-			applyQualityColorWithQuestCheck(sellItemButton, nil)
+			cfItemColors.applyQualityColor(sellItemButton, nil)
 		end
 	end
 end
@@ -103,37 +92,37 @@ end
 -- Clear all auction house colors
 local function clearAllAuctionHouseColors()
 	-- Clear browse items
-	for i = 1, NUM_BROWSE_TO_DISPLAY do
+	for i = 1, (NUM_BROWSE_TO_DISPLAY or 8) do
 		local button = browseButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
-	
+
 	-- Clear bid items
-	for i = 1, NUM_BIDS_TO_DISPLAY do
+	for i = 1, (NUM_BIDS_TO_DISPLAY or 8) do
 		local button = bidButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
-	
+
 	-- Clear auction items
-	for i = 1, NUM_AUCTIONS_TO_DISPLAY do
+	for i = 1, (NUM_AUCTIONS_TO_DISPLAY or 8) do
 		local button = auctionButtonCache[i]
 		if button then
-			applyQualityColorWithQuestCheck(button, nil)
+			cfItemColors.applyQualityColor(button, nil)
 		end
 	end
-	
+
 	-- Clear sell item
 	if sellItemButton then
-		applyQualityColorWithQuestCheck(sellItemButton, nil)
+		cfItemColors.applyQualityColor(sellItemButton, nil)
 	end
 end
 
 -- Event frame for auction house monitoring
-local eventFrame = _CreateFrame("Frame")
+local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("AUCTION_HOUSE_SHOW")
 eventFrame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
 eventFrame:RegisterEvent("AUCTION_BIDDER_LIST_UPDATE")

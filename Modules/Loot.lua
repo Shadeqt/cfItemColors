@@ -1,16 +1,10 @@
-local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
-
--- WoW API calls
-local _GetLootSlotLink = GetLootSlotLink
-local _G = _G
-
 -- Apply quality color to a single loot slot button
 local function updateLootSlotButton(slotIndex)
 	local lootSlotButton = _G["LootButton" .. slotIndex]
 	if not lootSlotButton then return end
 
-	local lootItemLink = _GetLootSlotLink(slotIndex)
-	applyQualityColorWithQuestCheck(lootSlotButton, lootItemLink)
+	local lootItemLink = GetLootSlotLink(slotIndex)
+	cfItemColors.applyQualityColorWithQuestCheck(lootSlotButton, lootItemLink)
 end
 
 -- Hook loot button updates

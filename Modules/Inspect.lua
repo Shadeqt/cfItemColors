@@ -1,36 +1,26 @@
-local addon = cfItemColors
-local applyQualityColor = addon.applyQualityColor
-
--- Cache API calls
-local _GetInventorySlotInfo = GetInventorySlotInfo
-local _GetInventoryItemLink = GetInventoryItemLink
-local _CreateFrame = CreateFrame
-local _C_Timer = C_Timer
-local _G = _G
-
-local EQUIPMENT_SLOTS = addon.EQUIPMENT_SLOTS
+local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 
 -- Cache slot data
 local inspectSlotCache = {}
 
 -- Initialize cache
 local function initializeCache()
-	for slotId = 1, #EQUIPMENT_SLOTS do
-		local slotName = EQUIPMENT_SLOTS[slotId]
-		inspectSlotCache[slotId] = {
+	for i = 1, #EQUIPMENT_SLOTS do
+		local slotName = EQUIPMENT_SLOTS[i]
+		inspectSlotCache[i] = {
 			button = _G["Inspect" .. slotName .. "Slot"],
-			inventorySlotId = _GetInventorySlotInfo(slotName .. "Slot")
+			inventorySlotId = GetInventorySlotInfo(slotName .. "Slot")
 		}
 	end
 end
 
 -- Update all inspect equipment slots
 local function updateAllInspectSlots()
-	for slotId = 1, #EQUIPMENT_SLOTS do
-		local slotData = inspectSlotCache[slotId]
+	for i = 1, #EQUIPMENT_SLOTS do
+		local slotData = inspectSlotCache[i]
 		if slotData and slotData.button then
-			local itemLink = _GetInventoryItemLink("target", slotData.inventorySlotId)
-			applyQualityColor(slotData.button, itemLink)
+			local itemLink = GetInventoryItemLink("target", slotData.inventorySlotId)
+			cfItemColors.applyQualityColor(slotData.button, itemLink)
 		end
 	end
 end
@@ -38,12 +28,12 @@ end
 -- Handle inspect events
 local function onInspectEvent(_, event)
 	if event == "INSPECT_READY" then
-		_C_Timer.After(0.1, updateAllInspectSlots)
+		C_Timer.After(0.1, updateAllInspectSlots)
 	end
 end
 
 -- Wait for Blizzard_InspectUI to load
-local eventFrame = _CreateFrame("Frame")
+local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_InspectUI" then
