@@ -25,7 +25,7 @@ local function updateSingleBankSlot(slotId)
 	local bankSlotButton = bankSlotButtonCache[slotId]
 	if not bankSlotButton then return end
 
-	local containerItemId = C_Container.GetContainerItemId(BANK_CONTAINER, slotId)
+	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
 	applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
 end
 
