@@ -27,7 +27,7 @@ local function updateSingleBagColors(bagId)
 	for i = 1, containerFrame.size do
 		local bagItemButton = _G[containerFrameName .. "Item" .. i]
 		if bagItemButton then
-			local bagItemButtonId = bagItemButton:GetId()
+			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemId(bagId, bagItemButtonId)
 			applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
 		end
