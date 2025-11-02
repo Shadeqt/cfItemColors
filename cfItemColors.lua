@@ -132,3 +132,6 @@ function cfItemColors.applyQualityColorWithQuestCheck(button, itemIdOrLink)
 	local checkQuestItems = true
 	applyQualityColor(button, itemIdOrLink, checkQuestItems)
 end
+
+-- Callback invoked when quest objectives change (cache updated)
+cfItemColors.onQuestObjectivesChanged = function() end

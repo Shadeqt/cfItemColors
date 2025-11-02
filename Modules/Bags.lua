@@ -14,7 +14,7 @@ local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS -- 7, bank bag slots (bags 5-11)
 -- Module constants
 local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS -- 11, combined total bag slots (4 player + 7 bank)
 
-local function updateSingleBagColors(bagId)
+local function updateSingleBagColors(bagId, clearCache)
 	if bagId < 0 or bagId > NUM_BAG_BANK_SLOTS then return end
 
 	local frameId = IsBagOpen(bagId)
@@ -27,6 +27,10 @@ local function updateSingleBagColors(bagId)
 	for i = 1, containerFrame.size do
 		local bagItemButton = _G[containerFrameName .. "Item" .. i]
 		if bagItemButton then
+			-- Clear cache to force re-evaluation when quest objectives change
+			if clearCache then
+				bagItemButton.cachedItemLink = nil
+			end
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
 			applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
@@ -35,20 +39,26 @@ local function updateSingleBagColors(bagId)
 end
 
 -- Updates all currently open bags with quality colors
-local function updateAllOpenBagColors()
+local function updateAllOpenBagColors(clearCache)
 	for i = 0, NUM_BAG_BANK_SLOTS do
 		if IsBagOpen(i) then
-			updateSingleBagColors(i)
+			updateSingleBagColors(i, clearCache)
 		end
 	end
 end
 
--- Only 2 events needed for complete coverage
+-- Callback: quest objectives changed, refresh all open bags with cache clear
+cfItemColors.onQuestObjectivesChanged = function()
+	local clearCache = true
+	updateAllOpenBagColors(clearCache)
+end
+
+-- Event registration for bag coloring
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")  -- Bag content changes (bags 0-10)
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  -- Login initialization
 
--- Processes bag changes and login
+-- Event handler for bag updates
 eventFrame:SetScript("OnEvent", function(_, event, bagId)
 	if event == "BAG_UPDATE_DELAYED" then
 		-- Specific bag operations (moves, new items) provide exact bagId
@@ -64,17 +74,15 @@ eventFrame:SetScript("OnEvent", function(_, event, bagId)
 	end
 end)
 
--- Handles user clicks on bag icons and B keybind
+-- Hook: user clicks on bag icons and B keybind
 hooksecurefunc("ToggleBag", function(bagId)
-	-- Only process valid bag Ids (0-4) that are currently open
 	if bagId >= 0 and bagId <= NUM_BAG_BANK_SLOTS and IsBagOpen(bagId) then
 		updateSingleBagColors(bagId)
 	end
 end)
 
--- Handles system-opened bags (vendor, mail, bank interactions)
+-- Hook: system-opened bags (vendor, mail, bank interactions)
 hooksecurefunc("OpenBag", function(bagId)
-	-- Only process bags 1-11 (regular bags + bank bags, excludes backpack since ToggleBag handles it)
 	if bagId >= 1 and bagId <= NUM_BAG_BANK_SLOTS and IsBagOpen(bagId) then
 		updateSingleBagColors(bagId)
 	end

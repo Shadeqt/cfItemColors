@@ -1,6 +1,7 @@
 -- Shared dependencies
 local questObjectiveCache = cfItemColors.questObjectiveCache
 
+-- Extract quest objective items from quest log entry
 local function extractQuestItems(questLogIndex)
 	local items = {}
 
@@ -61,16 +62,20 @@ local function rebuildCache()
 	end
 end
 
--- Register events
+-- Event registration for quest tracking
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_ACCEPTED")
 eventFrame:RegisterEvent("QUEST_REMOVED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+-- Event handler for quest updates
 eventFrame:SetScript("OnEvent", function(_, event, questLogIndex, questId)
 	if event == "QUEST_ACCEPTED" then
 		addQuestItems(questLogIndex, questId)
+		cfItemColors.onQuestObjectivesChanged()
 	elseif event == "QUEST_REMOVED" then
 		removeQuestItems(questLogIndex)
+		cfItemColors.onQuestObjectivesChanged()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		rebuildCache()
 	end
