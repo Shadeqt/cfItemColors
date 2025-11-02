@@ -78,8 +78,8 @@ end
 
 -- Core quality color application logic
 local function applyQualityColor(button, itemIdOrLink, checkQuestItems)
-	-- Early exit if item hasn't changed
-	if button.cachedItemLink == itemIdOrLink then return end
+	-- Early exit if item hasn't changed and cache is valid
+	if button.cachedItemLink == itemIdOrLink and button.cachedQuality then return end
 
 	-- Create border if needed
 	if not button.customBorder then

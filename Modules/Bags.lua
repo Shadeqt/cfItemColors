@@ -30,6 +30,7 @@ local function updateSingleBagColors(bagId, clearCache)
 			-- Clear cache to force re-evaluation when quest objectives change
 			if clearCache then
 				bagItemButton.cachedItemLink = nil
+				bagItemButton.cachedQuality = nil
 			end
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)

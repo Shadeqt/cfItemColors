@@ -1,7 +1,6 @@
 -- Shared dependencies
 local questObjectiveCache = cfItemColors.questObjectiveCache
 
--- Extract quest objective items from quest log entry
 local function extractQuestItems(questLogIndex)
 	local items = {}
 
@@ -38,6 +37,7 @@ local function addQuestItems(questLogIndex, questId)
 	for itemName in pairs(items) do
 		questObjectiveCache[itemName] = questId
 	end
+	cfItemColors.onQuestObjectivesChanged()
 end
 
 -- Remove quest items from cache
@@ -47,6 +47,7 @@ local function removeQuestItems(questId)
 			questObjectiveCache[itemName] = nil
 		end
 	end
+	cfItemColors.onQuestObjectivesChanged()
 end
 
 -- Rebuild entire cache
@@ -60,22 +61,21 @@ local function rebuildCache()
 			addQuestItems(i, questId)
 		end
 	end
+
+	cfItemColors.onQuestObjectivesChanged()
 end
 
--- Event registration for quest tracking
+-- Register events
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_ACCEPTED")
 eventFrame:RegisterEvent("QUEST_REMOVED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-
--- Event handler for quest updates
 eventFrame:SetScript("OnEvent", function(_, event, questLogIndex, questId)
 	if event == "QUEST_ACCEPTED" then
 		addQuestItems(questLogIndex, questId)
-		cfItemColors.onQuestObjectivesChanged()
 	elseif event == "QUEST_REMOVED" then
-		removeQuestItems(questLogIndex)
-		cfItemColors.onQuestObjectivesChanged()
+		-- QUEST_REMOVED doesn't provide questId in Classic Era, rebuild entire cache
+		rebuildCache()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		rebuildCache()
 	end
