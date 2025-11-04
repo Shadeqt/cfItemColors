@@ -1,3 +1,9 @@
+local isConflict, conflictingAddon = cfItemColors.Compatibility.IsBagAddonActive()
+if isConflict then
+	print(conflictingAddon .. " has been detected. CfItemColors disabled bag module.")
+	return
+end
+
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 
@@ -7,15 +13,32 @@ local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS -- 7, bank bag slots (bags 5-11)
 
 -- Module constants
 local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS -- 11, combined total bag slots (4 player + 7 bank)
+local MAX_CONTAINER_ITEMS = 36 -- Maximum items per bag container
+
+-- Module states
+local containerFrameCache = {} -- Cache structure: [frameId][slotIndex] = button
+
+-- Lazy-cache container frame buttons (built when bag opens)
+local function getCachedButton(frameId, slotIndex)
+	if not containerFrameCache[frameId] then
+		containerFrameCache[frameId] = {}
+	end
+
+	if not containerFrameCache[frameId][slotIndex] then
+		containerFrameCache[frameId][slotIndex] = _G["ContainerFrame" .. frameId .. "Item" .. slotIndex]
+	end
+
+	return containerFrameCache[frameId][slotIndex]
+end
 
 -- Updates a single bag with quality colors for all its slots
 local function updateSingleBagColors(bagId)
 	local frameId = IsBagOpen(bagId)
 	if not frameId then return end
-	
+
 	local numSlots = C_Container.GetContainerNumSlots(bagId)
 	for i = 1, numSlots do
-		local bagItemButton = _G["ContainerFrame" .. frameId .. "Item" .. i]
+		local bagItemButton = getCachedButton(frameId, i)
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)

@@ -2,10 +2,21 @@
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
 
+-- Module states
+local inspectButtonCache = {}
+
+-- Lazy-cache inspect equipment slot frames (built on first use)
+local function initializeInspectCache()
+	if #inspectButtonCache > 0 then return end
+
+	for i = 1, #EQUIPMENT_SLOTS do
+		inspectButtonCache[i] = _G["Inspect" .. EQUIPMENT_SLOTS[i] .. "Slot"]
+	end
+end
+
 -- Updates a single inspect equipment slot with quality color
 local function updateSingleInspectSlot(slotId)
-	local equipmentSlot = EQUIPMENT_SLOTS[slotId]
-	local inspectButton = _G["Inspect" .. equipmentSlot .. "Slot"]
+	local inspectButton = inspectButtonCache[slotId]
 	local inventoryItemLink = GetInventoryItemLink("target", slotId)
 	applyQualityColor(inspectButton, inventoryItemLink)
 end
@@ -29,6 +40,7 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, _, addonName)
 	if addonName == "Blizzard_InspectUI" then
+		initializeInspectCache()  -- Build cache when inspect UI loads
 		eventFrame:RegisterEvent("INSPECT_READY")
 		eventFrame:SetScript("OnEvent", onInspectEvent)
 		self:UnregisterEvent("ADDON_LOADED")

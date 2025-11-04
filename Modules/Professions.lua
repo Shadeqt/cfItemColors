@@ -4,19 +4,40 @@ local applyQualityColor = cfItemColors.applyQualityColor
 -- Module constants
 local NUM_REAGENT_SLOTS = 8 -- 8, maximum reagent slots in tradeskill window
 
+-- Module states
+local craftedItemButton = nil
+local reagentButtonCache = {}
+local classTrainerIconButton = nil
+
+-- Lazy-cache tradeskill frames (built when UI loads)
+local function initializeTradeSkillCache()
+	if craftedItemButton then return end
+
+	craftedItemButton = _G["TradeSkillSkillIcon"]
+	for i = 1, NUM_REAGENT_SLOTS do
+		reagentButtonCache[i] = _G["TradeSkillReagent" .. i]
+	end
+end
+
+-- Lazy-cache class trainer frame (built when trainer shows)
+local function initializeClassTrainerCache()
+	if classTrainerIconButton then return end
+	classTrainerIconButton = _G["ClassTrainerSkillIcon"]
+end
+
 -- Updates crafted item icon and reagent slots for selected tradeskill recipe
 local function updateTradeSkillItems()
+	initializeTradeSkillCache()
 	local selectedIndex = GetTradeSkillSelectionIndex()
 
 	-- Update crafted item
-	local craftedItemButton = _G["TradeSkillSkillIcon"]
 	local itemLink = GetTradeSkillItemLink(selectedIndex)
 	applyQualityColor(craftedItemButton, itemLink)
 
 	-- Update reagents
 	local numReagents = GetTradeSkillNumReagents(selectedIndex)
 	for i = 1, numReagents do
-		local button = _G["TradeSkillReagent" .. i]
+		local button = reagentButtonCache[i]
 		local reagentLink = GetTradeSkillReagentItemLink(selectedIndex, i)
 		applyQualityColor(button, reagentLink)
 	end
@@ -27,8 +48,8 @@ trainerScanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
 
 -- Updates item icon for selected class trainer recipe using tooltip scan
 local function updateClassTrainerIcon()
+	initializeClassTrainerCache()
 	local selectedIndex = GetTrainerSelectionIndex()
-	local classTrainerIconButton = _G["ClassTrainerSkillIcon"]
 
 	trainerScanTooltip:SetTrainerService(selectedIndex)
 	local _, itemLink = trainerScanTooltip:GetItem()

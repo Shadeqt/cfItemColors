@@ -2,10 +2,17 @@
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
 
+-- Module states
+local equipmentButtonCache = {}
+
+-- Pre-cache character equipment slot frames at module load
+for i = 1, #EQUIPMENT_SLOTS do
+	equipmentButtonCache[i] = _G["Character" .. EQUIPMENT_SLOTS[i] .. "Slot"]
+end
+
 -- Updates a single character equipment slot with quality color
 local function updateSingleEquipmentSlot(slotId)
-	local equipmentSlot = EQUIPMENT_SLOTS[slotId]
-	local equipmentButton = _G["Character" .. equipmentSlot .. "Slot"]
+	local equipmentButton = equipmentButtonCache[slotId]
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
 	applyQualityColor(equipmentButton, inventoryItemLink)
 end
