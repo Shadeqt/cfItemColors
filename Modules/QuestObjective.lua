@@ -1,8 +1,8 @@
 -- Shared dependencies
 local questObjectiveCache = cfItemColors.questObjectiveCache
 
--- GetQuestLogTitle() returns questID as 8th value
-local QUEST_LOG_TITLE_QUESTID = 8
+-- Module constants
+local QUEST_LOG_TITLE_QUESTID = 8 -- GetQuestLogTitle() returns questID as 8th value
 
 -- Extracts item objectives and special quest items from a quest
 local function extractQuestItems(questLogIndex)
