@@ -1,11 +1,11 @@
 ## Interface: 11508
-## Title:     cfItemColorsSimpleOptimized
-## Notes:     Adds quality-colored borders to items based on rarity (optimized version)
+## Title:     cfItemColors
+## Notes:     Adds quality-colored borders to items based on rarity
 ## Author:    Cowfoot
 ## Version:   1.0
 
 # Core module (must load first)
-cfItemColorsSimpleOptimized.lua
+cfItemColors.lua
 
 # Domain modules
 #Modules\AuctionHouse.lua
