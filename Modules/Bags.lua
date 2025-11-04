@@ -1,3 +1,9 @@
+local isConflict, conflictingAddon = cfItemColors.Compatibility.IsBagAddonActive()
+if isConflict then
+	print(conflictingAddon .. " has been detected. CfItemColors disabled bag module.")
+	return
+end
+
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 

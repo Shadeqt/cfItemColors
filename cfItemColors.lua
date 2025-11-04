@@ -22,34 +22,6 @@ local MISCLASSIFIED_QUEST_ITEMS = {
 	["Kravel's Crate"] = true,
 }
 
-function cfItemColors.IsBagAddonActive()
-	for i = 1, C_AddOns.GetNumAddOns() do
-		if C_AddOns.IsAddOnLoaded(i) then
-			local name = C_AddOns.GetAddOnInfo(i):lower()
-			local title = (C_AddOns.GetAddOnMetadata(i, "Title") or ""):lower()
-			local notes = (C_AddOns.GetAddOnMetadata(i, "Notes") or ""):lower()
-			local xnotes = (C_AddOns.GetAddOnMetadata(i, "X-Notes") or ""):lower()
-			local category = (C_AddOns.GetAddOnMetadata(i, "Category") or ""):lower()
-			local xcategory = (C_AddOns.GetAddOnMetadata(i, "X-Category") or ""):lower()
-
-			-- Check all metadata fields for bag-related keywords
-			local fields = {name, title, notes, xnotes, category, xcategory}
-			-- Bag addon detection keywords
-			local BAG_KEYWORDS = {"bag", "inventory"}
-
-			for _, field in ipairs(fields) do
-				for _, keyword in ipairs(BAG_KEYWORDS) do
-					if field:find(keyword) then
-						return true, C_AddOns.GetAddOnInfo(i)
-					end
-				end
-			end
-		end
-	end
-
-	return false, nil
-end
-
 -- Determines if an item is quest-related based on type, class, or cache
 local function isQuestItem(itemType, itemClassId, itemName)
 	if itemType == "Quest" or itemClassId == 12 then
