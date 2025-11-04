@@ -35,6 +35,7 @@ cfItemColors.EQUIPMENT_SLOTS = {
 }
 
 cfItemColors.questObjectiveCache = {}
+cfItemColors.questCacheVersion = 0
 
 -- Module states
 local questObjectiveCache = cfItemColors.questObjectiveCache
@@ -153,7 +154,7 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 		return
 	end
 
-	if button.itemIdOrLink == itemIdOrLink then
+	if button.itemIdOrLink == itemIdOrLink and button.questCacheVersion == cfItemColors.questCacheVersion then
 		cfItemColors.metrics.earlyReturn_cachedItemLink = cfItemColors.metrics.earlyReturn_cachedItemLink + 1
 		return
 	end
@@ -166,6 +167,7 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 	end
 
 	button.itemIdOrLink = itemIdOrLink
+	button.questCacheVersion = cfItemColors.questCacheVersion
 
 	-- Upgrade quest items to special quality
 	if itemQuality <= QUALITY_COMMON and isQuestItem(itemType, itemClassId, itemName) then
