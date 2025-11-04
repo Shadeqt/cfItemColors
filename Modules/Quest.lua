@@ -13,15 +13,13 @@ local function updateQuestRewards(buttonPrefix)
 	local totalRewards = numChoices + numRewards
 	for i = 1, totalRewards do
 		local button = _G[buttonPrefix .. i]
-		if button then
-			local itemLink
-			if i <= numChoices then
-				itemLink = getItemLink("choice", i)
-			else
-				itemLink = getItemLink("reward", i - numChoices)
-			end
-			applyQualityColor(button, itemLink)
+		local itemLink
+		if i <= numChoices then
+			itemLink = getItemLink("choice", i)
+		else
+			itemLink = getItemLink("reward", i - numChoices)
 		end
+		applyQualityColor(button, itemLink)
 	end
 end
 
@@ -30,10 +28,8 @@ local function updateQuestRequiredItems()
 	local numItems = GetNumQuestItems()
 	for i = 1, numItems do
 		local button = _G["QuestProgressItem" .. i]
-		if button then
-			local itemLink = GetQuestItemLink("required", i)
-			applyQualityColorWithQuestCheck(button, itemLink)
-		end
+		local itemLink = GetQuestItemLink("required", i)
+		applyQualityColorWithQuestCheck(button, itemLink)
 	end
 end
 

@@ -1,9 +1,3 @@
-local isActive, addonName = cfItemColors.IsBagAddonActive()
-if isActive then
-	print("cfItemColors: Bag addon detected (" .. addonName .. "), bank module disabled")
-	return
-end
-
 -- Shared dependencies
 local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
@@ -13,16 +7,8 @@ local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main
 -- Module constants
 local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes bag slots)
 
--- Module states
-local bankSlotButtonCache = {}
-for i = 1, NUM_BANK_SLOTS do
-	bankSlotButtonCache[i] = _G["BankFrameItem" .. i]
-end
-
 local function updateSingleBankSlot(slotId)
-	if slotId < 1 or slotId > NUM_BANK_SLOTS then return end
-
-	local bankSlotButton = bankSlotButtonCache[slotId]
+	local bankSlotButton = _G["BankFrameItem" .. slotId]
 	if not bankSlotButton then return end
 
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
@@ -49,5 +35,3 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 		updateAllBankSlots()
 	end
 end)
-
-

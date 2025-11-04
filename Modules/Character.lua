@@ -2,18 +2,8 @@
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
 
--- Module states
-local equipmentSlotButtonCache = {}
-for i = 1, #EQUIPMENT_SLOTS do
-	equipmentSlotButtonCache[i] = _G["Character" .. EQUIPMENT_SLOTS[i] .. "Slot"]
-end
-
 local function updateSingleEquipmentSlot(slotId)
-	if slotId < 1 or slotId > 19 then return end
-
-	local equipmentButton = equipmentSlotButtonCache[slotId]
-	if not equipmentButton then return end
-
+	local equipmentButton = _G["Character" .. EQUIPMENT_SLOTS[slotId] .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
 	applyQualityColor(equipmentButton, inventoryItemLink)
 end

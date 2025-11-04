@@ -3,8 +3,6 @@ local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestC
 
 local function updateLootSlotButton(slotIndex)
 	local lootSlotButton = _G["LootButton" .. slotIndex]
-	if not lootSlotButton then return end
-
 	local lootItemLink = GetLootSlotLink(slotIndex)
 	applyQualityColorWithQuestCheck(lootSlotButton, lootItemLink)
 end

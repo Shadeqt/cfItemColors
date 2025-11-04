@@ -9,8 +9,6 @@ local function extractQuestItems(questLogIndex)
 	for i = 1, numObjectives do
 		local objectiveText, objectiveType = GetQuestLogLeaderBoard(i, questLogIndex)
 
-
-
 		if objectiveType == "item" and objectiveText then
 			local itemName = objectiveText:match("^(.-):%s*%d+/%d+")
 			if itemName then
@@ -22,32 +20,15 @@ local function extractQuestItems(questLogIndex)
 	-- Special quest items (right-click to use)
 	local specialItemLink = GetQuestLogSpecialItemInfo(questLogIndex)
 	if specialItemLink then
+		print("Found special item link:", specialItemLink)
 		local itemName = specialItemLink:match("|h%[([^%]]+)%]|h")
 		if itemName then
+			print("Adding special quest item:", itemName)
 			items[itemName] = true
 		end
 	end
 
 	return items
-end
-
--- Add quest items to cache
-local function addQuestItems(questLogIndex, questId)
-	local items = extractQuestItems(questLogIndex)
-	for itemName in pairs(items) do
-		questObjectiveCache[itemName] = questId
-	end
-	cfItemColors.onQuestObjectivesChanged()
-end
-
--- Remove quest items from cache
-local function removeQuestItems(questId)
-	for itemName, ownerId in pairs(questObjectiveCache) do
-		if ownerId == questId then
-			questObjectiveCache[itemName] = nil
-		end
-	end
-	cfItemColors.onQuestObjectivesChanged()
 end
 
 -- Rebuild entire cache
@@ -56,9 +37,12 @@ local function rebuildCache()
 
 	local numQuests = GetNumQuestLogEntries()
 	for i = 1, numQuests do
-		local _, _, _, isHeader, _, _, _, questId = GetQuestLogTitle(i)
-		if not isHeader and questId then
-			addQuestItems(i, questId)
+		local _, _, _, isHeader = GetQuestLogTitle(i)
+		if not isHeader then
+			local items = extractQuestItems(i)
+			for itemName in pairs(items) do
+				questObjectiveCache[itemName] = true
+			end
 		end
 	end
 
@@ -70,13 +54,4 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_ACCEPTED")
 eventFrame:RegisterEvent("QUEST_REMOVED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:SetScript("OnEvent", function(_, event, questLogIndex, questId)
-	if event == "QUEST_ACCEPTED" then
-		addQuestItems(questLogIndex, questId)
-	elseif event == "QUEST_REMOVED" then
-		-- QUEST_REMOVED doesn't provide questId in Classic Era, rebuild entire cache
-		rebuildCache()
-	elseif event == "PLAYER_ENTERING_WORLD" then
-		rebuildCache()
-	end
-end)
+eventFrame:SetScript("OnEvent", rebuildCache)
