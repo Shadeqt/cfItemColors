@@ -2,8 +2,10 @@
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
 
+-- Updates a single inspect equipment slot with quality color
 local function updateSingleInspectSlot(slotId)
-	local inspectButton = _G["Inspect" .. EQUIPMENT_SLOTS[slotId] .. "Slot"]
+	local equipmentSlot = EQUIPMENT_SLOTS[slotId]
+	local inspectButton = _G["Inspect" .. equipmentSlot .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("target", slotId)
 	applyQualityColor(inspectButton, inventoryItemLink)
 end

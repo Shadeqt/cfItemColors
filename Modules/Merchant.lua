@@ -4,14 +4,16 @@ local applyQualityColor = cfItemColors.applyQualityColor
 -- WoW constants
 local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10, items displayed per merchant page
 
--- Module constants
-local NUM_BUYBACK_SLOTS = 12 -- 12, maximum buyback history slots at vendors
-
+-- Updates merchant item buttons and buyback preview for current page
 local function updateMerchantItems()
-	local currentPage = MerchantFrame.page or 1
+	local currentPage = MerchantFrame.page
 	local pageOffset = (currentPage - 1) * MERCHANT_ITEMS_PER_PAGE
+	local numMerchantItems = GetMerchantNumItems()
 
-	for i = 1, MERCHANT_ITEMS_PER_PAGE do
+	-- Calculate actual items on current page
+	local itemsOnPage = math.min(MERCHANT_ITEMS_PER_PAGE, numMerchantItems - pageOffset)
+
+	for i = 1, itemsOnPage do
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemIndex = pageOffset + i
 		local itemLink = GetMerchantItemLink(itemIndex)
@@ -20,13 +22,16 @@ local function updateMerchantItems()
 
 	-- Update buyback preview button
 	local buybackPreviewButton = _G["MerchantBuyBackItemItemButton"]
-	local buybackLink = GetBuybackItemLink(GetNumBuybackItems())
+	local numBuybackItems = GetNumBuybackItems()
+	local buybackLink = GetBuybackItemLink(numBuybackItems)
 	applyQualityColor(buybackPreviewButton, buybackLink)
 end
 
--- Update buyback tab items
+-- Updates buyback tab item buttons
 local function updateBuybackItems()
-	for i = 1, NUM_BUYBACK_SLOTS do
+	local numBuybackItems = GetNumBuybackItems()
+
+	for i = 1, numBuybackItems do
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemLink = GetBuybackItemLink(i)
 		applyQualityColor(button, itemLink)

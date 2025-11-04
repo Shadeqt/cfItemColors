@@ -1,26 +1,26 @@
--- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 
--- WoW constants
-local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7, inbox items per page
-local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12, max attachments when sending mail
-local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16, max attachments when receiving mail
+-- WoW API constants
+local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
+local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12
+local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16
 
+-- Update inbox mail item colors based on highest quality attachment
 local function updateInboxItems()
 	local numItems = GetInboxNumItems()
 	local pageOffset = ((InboxFrame and InboxFrame.pageNum or 1) - 1) * INBOXITEMS_TO_DISPLAY
+	local itemsOnPage = math.min(INBOXITEMS_TO_DISPLAY, numItems - pageOffset)
 
-	for i = 1, INBOXITEMS_TO_DISPLAY do
+	for i = 1, itemsOnPage do
 		local button = _G["MailItem" .. i .. "Button"]
 		local mailIndex = pageOffset + i
 
-		-- Find highest quality item in this mail
 		local bestItemLink = nil
 		local bestQuality = -1
 
-		-- Check all possible attachments in this mail
+		-- Check all attachment slots (items don't shift when removed)
 		for j = 1, ATTACHMENTS_MAX_RECEIVE do
-			local name, itemTexture, count, quality, canUse = GetInboxItem(mailIndex, j)
+			local name, _, _, _, quality = GetInboxItem(mailIndex, j)
 			if name and quality and quality > bestQuality then
 				bestQuality = quality
 				bestItemLink = GetInboxItemLink(mailIndex, j)
@@ -52,33 +52,19 @@ local function updateOpenMailItems()
 	end
 end
 
--- Event frame for mailbox monitoring
+-- Register mailbox events
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("MAIL_SHOW")
 eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
 eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
-eventFrame:RegisterEvent("MAIL_SUCCESS")
 eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")
 
--- Handle mailbox events
 eventFrame:SetScript("OnEvent", function(_, event)
-	print("Mailbox event:", event)
-	if event == "MAIL_SHOW" then
+	if event == "MAIL_INBOX_UPDATE" then
 		updateInboxItems()
-		updateSendMailItems()
-		updateOpenMailItems()
-	elseif event == "MAIL_INBOX_UPDATE" then
-		updateInboxItems()
-		updateOpenMailItems()
-	elseif event == "MAIL_SEND_INFO_UPDATE" then
-		updateSendMailItems()
-	elseif event == "MAIL_SUCCESS" then
-		updateSendMailItems()
-		updateOpenMailItems()
-	elseif event == "MAIL_SEND_SUCCESS" then
+	elseif event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
 		updateSendMailItems()
 	end
 end)
 
--- Hook into OpenMailFrame update to handle opened mail
+-- Update opened mail attachments
 hooksecurefunc("OpenMail_Update", updateOpenMailItems)

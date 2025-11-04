@@ -8,6 +8,7 @@ local NUM_BANKBAGSLOTS = NUM_BANKBAGSLOTS -- 7, bank bag slots (bags 5-11)
 -- Module constants
 local NUM_BAG_BANK_SLOTS = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS -- 11, combined total bag slots (4 player + 7 bank)
 
+-- Updates a single bag with quality colors for all its slots
 local function updateSingleBagColors(bagId)
 	local frameId = IsBagOpen(bagId)
 	if not frameId then return end
@@ -17,8 +18,8 @@ local function updateSingleBagColors(bagId)
 		local bagItemButton = _G["ContainerFrame" .. frameId .. "Item" .. i]
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetID()
-				local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
-				applyQualityColor(bagItemButton, containerItemId)
+			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
+			applyQualityColor(bagItemButton, containerItemId)
 		end
 	end
 end

@@ -7,10 +7,9 @@ local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main
 -- Module constants
 local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes bag slots)
 
+-- Updates a single bank slot with quality color
 local function updateSingleBankSlot(slotId)
 	local bankSlotButton = _G["BankFrameItem" .. slotId]
-	if not bankSlotButton then return end
-
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
 	applyQualityColor(bankSlotButton, containerItemId)
 end

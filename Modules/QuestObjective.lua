@@ -50,6 +50,12 @@ local function createQuestCache()
 	end
 end
 
+-- Increments cache version and triggers bag refresh
+local function invalidateQuestCache()
+	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
+	cfItemColors.onQuestObjectivesChanged()
+end
+
 -- Adds items from newly accepted quest to cache
 local function onQuestAccepted(questLogIndex)
 	local items, questID = extractQuestItems(questLogIndex)
@@ -57,9 +63,7 @@ local function onQuestAccepted(questLogIndex)
 		questObjectiveCache[itemName] = questID
 	end
 
-	-- Increment cache version to invalidate stale item colors
-	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
-	cfItemColors.onQuestObjectivesChanged()
+	invalidateQuestCache()
 end
 
 -- Removes items belonging to abandoned/completed quest from cache
@@ -70,9 +74,7 @@ local function onQuestRemoved(questID)
 		end
 	end
 
-	-- Increment cache version to invalidate stale item colors
-	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
-	cfItemColors.onQuestObjectivesChanged()
+	invalidateQuestCache()
 end
 
 -- Event registration and handler

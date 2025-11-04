@@ -2,8 +2,10 @@
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
 
+-- Updates a single character equipment slot with quality color
 local function updateSingleEquipmentSlot(slotId)
-	local equipmentButton = _G["Character" .. EQUIPMENT_SLOTS[slotId] .. "Slot"]
+	local equipmentSlot = EQUIPMENT_SLOTS[slotId]
+	local equipmentButton = _G["Character" .. equipmentSlot .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
 	applyQualityColor(equipmentButton, inventoryItemLink)
 end

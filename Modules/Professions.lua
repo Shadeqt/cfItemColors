@@ -4,7 +4,7 @@ local applyQualityColor = cfItemColors.applyQualityColor
 -- Module constants
 local NUM_REAGENT_SLOTS = 8 -- 8, maximum reagent slots in tradeskill window
 
--- Update tradeskill items
+-- Updates crafted item icon and reagent slots for selected tradeskill recipe
 local function updateTradeSkillItems()
 	local selectedIndex = GetTradeSkillSelectionIndex()
 
@@ -14,7 +14,8 @@ local function updateTradeSkillItems()
 	applyQualityColor(craftedItemButton, itemLink)
 
 	-- Update reagents
-	for i = 1, NUM_REAGENT_SLOTS do
+	local numReagents = GetTradeSkillNumReagents(selectedIndex)
+	for i = 1, numReagents do
 		local button = _G["TradeSkillReagent" .. i]
 		local reagentLink = GetTradeSkillReagentItemLink(selectedIndex, i)
 		applyQualityColor(button, reagentLink)
@@ -22,12 +23,13 @@ local function updateTradeSkillItems()
 end
 
 local trainerScanTooltip = CreateFrame("GameTooltip", "cfItemColorsTrainerScan", nil, "GameTooltipTemplate")
+trainerScanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
 
+-- Updates item icon for selected class trainer recipe using tooltip scan
 local function updateClassTrainerIcon()
 	local selectedIndex = GetTrainerSelectionIndex()
 	local classTrainerIconButton = _G["ClassTrainerSkillIcon"]
 
-	trainerScanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
 	trainerScanTooltip:SetTrainerService(selectedIndex)
 	local _, itemLink = trainerScanTooltip:GetItem()
 	applyQualityColor(classTrainerIconButton, itemLink)
@@ -42,12 +44,12 @@ eventFrame:SetScript("OnEvent", function(self, event, addonName)
 	if event == "ADDON_LOADED" and addonName == "Blizzard_TradeSkillUI" then
 		hooksecurefunc("TradeSkillFrame_Update", updateTradeSkillItems)
 	elseif event == "TRAINER_SHOW" then
+		-- Unregister immediately to prevent race condition
+		self:UnregisterEvent("TRAINER_SHOW")
+
 		-- Delay initialization to ensure frame is fully loaded
 		C_Timer.After(0.1, function()
 			hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
-			updateClassTrainerIcon()
 		end)
-		-- Unregister after first trainer show to avoid re-hooking
-		self:UnregisterEvent("TRAINER_SHOW")
 	end
 end)
