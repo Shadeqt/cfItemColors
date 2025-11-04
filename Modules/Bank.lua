@@ -1,5 +1,5 @@
 -- Shared dependencies
-local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+local applyQualityColor = cfItemColors.applyQualityColor
 
 -- WoW constants
 local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main bank storage
@@ -12,7 +12,7 @@ local function updateSingleBankSlot(slotId)
 	if not bankSlotButton then return end
 
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
-	applyQualityColorWithQuestCheck(bankSlotButton, containerItemId)
+	applyQualityColor(bankSlotButton, containerItemId)
 end
 
 -- Updates all bank container slots with quality colors

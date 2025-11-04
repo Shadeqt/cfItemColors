@@ -1,6 +1,5 @@
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
-local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
 
 local function updateQuestRewards(buttonPrefix)
 	local isQuestLog = QuestLogFrame and QuestLogFrame:IsVisible()
@@ -28,8 +27,8 @@ local function updateQuestRequiredItems()
 	local numItems = GetNumQuestItems()
 	for i = 1, numItems do
 		local button = _G["QuestProgressItem" .. i]
-		local itemLink = GetQuestItemLink("required", i)
-		applyQualityColorWithQuestCheck(button, itemLink)
+			local itemLink = GetQuestItemLink("required", i)
+			applyQualityColor(button, itemLink)
 	end
 end
 

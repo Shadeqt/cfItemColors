@@ -1,5 +1,5 @@
 -- Shared dependencies
-local applyQualityColorWithQuestCheck = cfItemColors.applyQualityColorWithQuestCheck
+local applyQualityColor = cfItemColors.applyQualityColor
 
 -- WoW constants
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS -- 4, player bag slots (excludes backpack slot 0)
@@ -17,8 +17,8 @@ local function updateSingleBagColors(bagId)
 		local bagItemButton = _G["ContainerFrame" .. frameId .. "Item" .. i]
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetID()
-			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
-			applyQualityColorWithQuestCheck(bagItemButton, containerItemId)
+				local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
+				applyQualityColor(bagItemButton, containerItemId)
 		end
 	end
 end
