@@ -1,26 +1,7 @@
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 
--- WoW constants
-local MAX_QUEST_ITEMS = 10 -- Maximum quest reward/choice items (6 choice + 4 guaranteed)
-local MAX_REQUIRED_ITEMS = 6 -- Maximum required items for quest progress
-
--- Module states
-local questInfoButtonCache = {}
-local questLogButtonCache = {}
-local questProgressButtonCache = {}
-
--- Pre-cache quest frames at module load
-for i = 1, MAX_QUEST_ITEMS do
-	questInfoButtonCache[i] = _G["QuestInfoRewardsFrameQuestInfoItem" .. i]
-	questLogButtonCache[i] = _G["QuestLogItem" .. i]
-end
-
-for i = 1, MAX_REQUIRED_ITEMS do
-	questProgressButtonCache[i] = _G["QuestProgressItem" .. i]
-end
-
-local function updateQuestRewards(buttonCache)
+local function updateQuestRewards(buttonPrefix)
 	local isQuestLog = QuestLogFrame and QuestLogFrame:IsVisible()
 
 	local numChoices = isQuestLog and GetNumQuestLogChoices() or GetNumQuestChoices()
@@ -30,7 +11,7 @@ local function updateQuestRewards(buttonCache)
 	-- All rewards (choice + guaranteed)
 	local totalRewards = numChoices + numRewards
 	for i = 1, totalRewards do
-		local button = buttonCache[i]
+		local button = _G[buttonPrefix .. i]
 		local itemLink
 		if i <= numChoices then
 			itemLink = getItemLink("choice", i)
@@ -45,7 +26,7 @@ end
 local function updateQuestRequiredItems()
 	local numItems = GetNumQuestItems()
 	for i = 1, numItems do
-		local button = questProgressButtonCache[i]
+		local button = _G["QuestProgressItem" .. i]
 		local itemLink = GetQuestItemLink("required", i)
 		applyQualityColor(button, itemLink)
 	end
@@ -53,16 +34,12 @@ end
 
 -- Triggers when viewing quest details at NPC
 hooksecurefunc("QuestInfo_Display", function()
-	updateQuestRewards(questInfoButtonCache)
-	-- Retry after short delay for timing issues
-	C_Timer.After(0.1, function()
-		updateQuestRewards(questInfoButtonCache)
-	end)
+	updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem")
 end)
 
 -- Triggers when quest log refreshes
 hooksecurefunc("QuestLog_Update", function()
-	updateQuestRewards(questLogButtonCache)
+	updateQuestRewards("QuestLogItem")
 end)
 
 -- Triggers when quest progress dialog shows required items

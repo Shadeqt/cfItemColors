@@ -4,25 +4,15 @@ local applyQualityColor = cfItemColors.applyQualityColor
 -- WoW constants
 local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player
 
--- Module states
-local playerTradeButtonCache = {}
-local targetTradeButtonCache = {}
-
--- Pre-cache trade frames at module load
-for i = 1, MAX_TRADE_ITEMS do
-	playerTradeButtonCache[i] = _G["TradePlayerItem" .. i .. "ItemButton"]
-	targetTradeButtonCache[i] = _G["TradeRecipientItem" .. i .. "ItemButton"]
-end
-
 local function updatePlayerTradeSlot(slotIndex)
-	local button = playerTradeButtonCache[slotIndex]
+	local button = _G["TradePlayerItem" .. slotIndex .. "ItemButton"]
 	local itemLink = GetTradePlayerItemLink(slotIndex)
 	applyQualityColor(button, itemLink)
 end
 
 -- Update target's trade slot colors
 local function updateTargetTradeSlot(slotIndex)
-	local button = targetTradeButtonCache[slotIndex]
+	local button = _G["TradeRecipientItem" .. slotIndex .. "ItemButton"]
 	local itemLink = GetTradeTargetItemLink(slotIndex)
 	applyQualityColor(button, itemLink)
 end

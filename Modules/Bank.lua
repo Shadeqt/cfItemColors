@@ -13,17 +13,9 @@ local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main
 -- Module constants
 local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes bag slots)
 
--- Module states
-local bankSlotCache = {}
-
--- Pre-cache bank slot frames at module load
-for i = 1, NUM_BANK_SLOTS do
-	bankSlotCache[i] = _G["BankFrameItem" .. i]
-end
-
 -- Updates a single bank slot with quality color
 local function updateSingleBankSlot(slotId)
-	local bankSlotButton = bankSlotCache[slotId]
+	local bankSlotButton = _G["BankFrameItem" .. slotId]
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
 	applyQualityColor(bankSlotButton, containerItemId)
 end

@@ -5,24 +5,6 @@ local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
 local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12
 local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16
 
--- Module states
-local inboxButtonCache = {}
-local sendMailButtonCache = {}
-local openMailButtonCache = {}
-
--- Pre-cache all mailbox frames at module load
-for i = 1, INBOXITEMS_TO_DISPLAY do
-	inboxButtonCache[i] = _G["MailItem" .. i .. "Button"]
-end
-
-for i = 1, ATTACHMENTS_MAX_SEND do
-	sendMailButtonCache[i] = _G["SendMailAttachment" .. i]
-end
-
-for i = 1, ATTACHMENTS_MAX_RECEIVE do
-	openMailButtonCache[i] = _G["OpenMailAttachmentButton" .. i]
-end
-
 -- Update inbox mail item colors based on highest quality attachment
 local function updateInboxItems()
 	local numItems = GetInboxNumItems()
@@ -30,7 +12,7 @@ local function updateInboxItems()
 	local itemsOnPage = math.min(INBOXITEMS_TO_DISPLAY, numItems - pageOffset)
 
 	for i = 1, itemsOnPage do
-		local button = inboxButtonCache[i]
+		local button = _G["MailItem" .. i .. "Button"]
 		local mailIndex = pageOffset + i
 
 		local bestItemLink = nil
@@ -52,7 +34,7 @@ end
 -- Update send mail attachment colors
 local function updateSendMailItems()
 	for i = 1, ATTACHMENTS_MAX_SEND do
-		local button = sendMailButtonCache[i]
+		local button = _G["SendMailAttachment" .. i]
 		local itemLink = GetSendMailItemLink(i)
 		applyQualityColor(button, itemLink)
 	end
@@ -64,7 +46,7 @@ local function updateOpenMailItems()
 	if not mailId then return end
 
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
-		local button = openMailButtonCache[i]
+		local button = _G["OpenMailAttachmentButton" .. i]
 		local itemLink = GetInboxItemLink(mailId, i)
 		applyQualityColor(button, itemLink)
 	end
