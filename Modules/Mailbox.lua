@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableMailbox then return end
+
 local applyQualityColor = cfItemColors.applyQualityColor
 
 -- WoW API constants

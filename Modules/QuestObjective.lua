@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableQuestObjective then return end
+
 -- Shared dependencies
 local questObjectiveCache = cfItemColors.questObjectiveCache
 
@@ -39,6 +42,12 @@ local function extractQuestItems(questLogIndex)
 	return items, questID
 end
 
+-- Increments cache version and triggers bag refresh
+local function invalidateQuestCache()
+	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
+	cfItemColors.onQuestObjectivesChanged()
+end
+
 -- Builds complete quest item cache on login
 local function createQuestCache()
 	local numQuests = GetNumQuestLogEntries()
@@ -58,12 +67,7 @@ local function createQuestCache()
             end
 		end
 	end
-end
-
--- Increments cache version and triggers bag refresh
-local function invalidateQuestCache()
-	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
-	cfItemColors.onQuestObjectivesChanged()
+	invalidateQuestCache()
 end
 
 -- Adds items from newly accepted quest to cache

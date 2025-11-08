@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableCharacter then return end
+
 -- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor
@@ -30,3 +33,10 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 		updateAllEquipmentSlots()
 	end
 end)
+
+-- Hook into quest cache updates to refresh equipment coloring
+local previousCallback = cfItemColors.onQuestObjectivesChanged
+cfItemColors.onQuestObjectivesChanged = function()
+	previousCallback()
+	updateAllEquipmentSlots()
+end

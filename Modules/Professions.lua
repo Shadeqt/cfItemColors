@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableProfessions then return end
+
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 

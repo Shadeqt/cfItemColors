@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableTrade then return end
+
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor
 

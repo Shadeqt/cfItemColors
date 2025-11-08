@@ -3,6 +3,7 @@
 ## Notes:     Adds quality-colored borders to items based on rarity
 ## Author:    Cowfoot
 ## Version:   1.0
+## SavedVariables: cfItemColorsDB
 
 # Core module (must load first)
 cfItemColors.lua

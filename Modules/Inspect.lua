@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableInspect then return end
+
 -- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
 local applyQualityColor = cfItemColors.applyQualityColor

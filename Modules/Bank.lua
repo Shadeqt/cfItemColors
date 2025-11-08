@@ -1,3 +1,6 @@
+-- Module enable check
+if not cfItemColorsDB.enableBank then return end
+
 local isConflict, conflictingAddon = cfItemColors.Compatibility.IsBagAddonActive()
 if isConflict then
 	print(conflictingAddon .. " has been detected. CfItemColors disabled bank module.")
