@@ -26,19 +26,26 @@ local bagsCheck = createCheckbox(panel, title, 0, -16, "enableBags", "Enable Bag
 local bankCheck = createCheckbox(panel, bagsCheck, 0, -8, "enableBank", "Enable Bank")
 local characterCheck = createCheckbox(panel, bankCheck, 0, -8, "enableCharacter", "Enable Character Sheet")
 local inspectCheck = createCheckbox(panel, characterCheck, 0, -8, "enableInspect", "Enable Inspect Window")
-local lootCheck = createCheckbox(panel, inspectCheck, 0, -8, "enableLoot", "Enable Loot Rolls")
-local mailboxCheck = createCheckbox(panel, lootCheck, 0, -8, "enableMailbox", "Enable Mailbox")
+local lootCheck = createCheckbox(panel, inspectCheck, 0, -8, "enableLoot", "Enable Loot Window")
 
 -- Right column checkboxes
 local merchantCheck = createCheckbox(panel, title, 250, -16, "enableMerchant", "Enable Merchant")
 local professionsCheck = createCheckbox(panel, merchantCheck, 0, -8, "enableProfessions", "Enable Professions")
 local questCheck = createCheckbox(panel, professionsCheck, 0, -8, "enableQuest", "Enable Quest Window")
 local questObjectiveCheck = createCheckbox(panel, questCheck, 0, -8, "enableQuestObjective", "Enable Quest Objectives")
-local tradeCheck = createCheckbox(panel, questObjectiveCheck, 0, -8, "enableTrade", "Enable Trade Window")
+
+-- Group 2 Header: Player Trading
+local group2Header = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+group2Header:SetPoint("TOPLEFT", lootCheck, "BOTTOMLEFT", 0, -16)
+group2Header:SetText("|cffFFD700Player Trading:|r")
+
+-- Group 2 checkboxes (Player trading features) - in columns
+local tradeCheck = createCheckbox(panel, group2Header, 0, -8, "enableTrade", "Enable Trade Window")
+local mailboxCheck = createCheckbox(panel, group2Header, 250, -8, "enableMailbox", "Enable Mailbox")
 
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-reloadBtn:SetPoint("TOPLEFT", mailboxCheck, "BOTTOMLEFT", 0, -16)
+reloadBtn:SetPoint("TOPLEFT", tradeCheck, "BOTTOMLEFT", 0, -16)
 reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
@@ -59,8 +66,8 @@ local info = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 info:SetPoint("TOPLEFT", reloadBtn, "BOTTOMLEFT", 4, -8)
 info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
--- OnShow: Create fresh pending state from database
-panel:SetScript("OnShow", function(self)
+-- Function to initialize checkboxes from database
+local function initializeCheckboxes()
 	-- Copy database to pending state
 	pendingState = {
 		enableBags = cfItemColorsDB.enableBags,
@@ -76,7 +83,7 @@ panel:SetScript("OnShow", function(self)
 		enableTrade = cfItemColorsDB.enableTrade,
 	}
 
-	-- Set checkboxes from pending state (which matches DB at this point)
+	-- Set checkboxes from pending state
 	bagsCheck:SetChecked(pendingState.enableBags)
 	bankCheck:SetChecked(pendingState.enableBank)
 	characterCheck:SetChecked(pendingState.enableCharacter)
@@ -88,7 +95,13 @@ panel:SetScript("OnShow", function(self)
 	questCheck:SetChecked(pendingState.enableQuest)
 	questObjectiveCheck:SetChecked(pendingState.enableQuestObjective)
 	tradeCheck:SetChecked(pendingState.enableTrade)
-end)
+end
+
+-- Initialize immediately (fixes OnShow not firing on first open)
+initializeCheckboxes()
+
+-- OnShow: Refresh checkboxes from database
+panel:SetScript("OnShow", initializeCheckboxes)
 
 -- Register with settings API (for modern WoW versions)
 if Settings and Settings.RegisterCanvasLayoutCategory then
