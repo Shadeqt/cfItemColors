@@ -2,6 +2,9 @@
 local panel = CreateFrame("Frame", "cfItemColorsPanel")
 panel.name = "cfItemColors"
 
+-- Pending state (created fresh on panel open)
+local pendingState = nil
+
 local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("cfItemColors Settings")
@@ -11,9 +14,9 @@ local function createCheckbox(parent, anchorTo, xOffset, yOffset, dbKey, labelTe
 	local check = CreateFrame("CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
 	check:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT", xOffset, yOffset)
 	check.Text:SetText(labelText)
-	check:SetChecked(cfItemColorsDB[dbKey])
+	check.dbKey = dbKey  -- Store the key for later use
 	check:SetScript("OnClick", function(self)
-		cfItemColorsDB[dbKey] = self:GetChecked()
+		pendingState[self.dbKey] = self:GetChecked()
 	end)
 	return check
 end
@@ -39,32 +42,52 @@ reloadBtn:SetPoint("TOPLEFT", mailboxCheck, "BOTTOMLEFT", 0, -16)
 reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
+	-- Commit pending changes to database
+	for key, value in pairs(pendingState) do
+		cfItemColorsDB[key] = value
+	end
 	ReloadUI()
 end)
 
 -- Warning text
 local warning = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 warning:SetPoint("LEFT", reloadBtn, "RIGHT", 8, 0)
-warning:SetText("|cffFF6600Changes require a reload to take effect|r")
+warning:SetText("|cffFF6600Click 'Reload UI' to apply changes|r")
 
 -- Info text
 local info = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 info:SetPoint("TOPLEFT", reloadBtn, "BOTTOMLEFT", 4, -8)
 info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
--- Refresh checkboxes when panel is shown
+-- OnShow: Create fresh pending state from database
 panel:SetScript("OnShow", function(self)
-	bagsCheck:SetChecked(cfItemColorsDB.enableBags)
-	bankCheck:SetChecked(cfItemColorsDB.enableBank)
-	characterCheck:SetChecked(cfItemColorsDB.enableCharacter)
-	inspectCheck:SetChecked(cfItemColorsDB.enableInspect)
-	lootCheck:SetChecked(cfItemColorsDB.enableLoot)
-	mailboxCheck:SetChecked(cfItemColorsDB.enableMailbox)
-	merchantCheck:SetChecked(cfItemColorsDB.enableMerchant)
-	professionsCheck:SetChecked(cfItemColorsDB.enableProfessions)
-	questCheck:SetChecked(cfItemColorsDB.enableQuest)
-	questObjectiveCheck:SetChecked(cfItemColorsDB.enableQuestObjective)
-	tradeCheck:SetChecked(cfItemColorsDB.enableTrade)
+	-- Copy database to pending state
+	pendingState = {
+		enableBags = cfItemColorsDB.enableBags,
+		enableBank = cfItemColorsDB.enableBank,
+		enableCharacter = cfItemColorsDB.enableCharacter,
+		enableInspect = cfItemColorsDB.enableInspect,
+		enableLoot = cfItemColorsDB.enableLoot,
+		enableMailbox = cfItemColorsDB.enableMailbox,
+		enableMerchant = cfItemColorsDB.enableMerchant,
+		enableProfessions = cfItemColorsDB.enableProfessions,
+		enableQuest = cfItemColorsDB.enableQuest,
+		enableQuestObjective = cfItemColorsDB.enableQuestObjective,
+		enableTrade = cfItemColorsDB.enableTrade,
+	}
+
+	-- Set checkboxes from pending state (which matches DB at this point)
+	bagsCheck:SetChecked(pendingState.enableBags)
+	bankCheck:SetChecked(pendingState.enableBank)
+	characterCheck:SetChecked(pendingState.enableCharacter)
+	inspectCheck:SetChecked(pendingState.enableInspect)
+	lootCheck:SetChecked(pendingState.enableLoot)
+	mailboxCheck:SetChecked(pendingState.enableMailbox)
+	merchantCheck:SetChecked(pendingState.enableMerchant)
+	professionsCheck:SetChecked(pendingState.enableProfessions)
+	questCheck:SetChecked(pendingState.enableQuest)
+	questObjectiveCheck:SetChecked(pendingState.enableQuestObjective)
+	tradeCheck:SetChecked(pendingState.enableTrade)
 end)
 
 -- Register with settings API (for modern WoW versions)
