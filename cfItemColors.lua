@@ -18,17 +18,13 @@ local QUALITY_UNCOMMON  = 2 -- Green
 local QUALITY_QUEST 	= 99
 QUALITY_COLORS[QUALITY_QUEST] = {r = 1.0, g = 0.82, b = 0.0}
 
-local MISCLASSIFIED_QUEST_ITEMS = {
-	["Kravel's Crate"] = true,
-}
-
 -- Determines if an item is quest-related based on type, class, or cache
 local function isQuestItem(itemType, itemClassId, itemName)
 	if itemType == "Quest" or itemClassId == 12 then
 		return true
 	end
 
-	if questObjectiveCache[itemName] or MISCLASSIFIED_QUEST_ITEMS[itemName] then
+	if questObjectiveCache[itemName] then
 		return true
 	end
 

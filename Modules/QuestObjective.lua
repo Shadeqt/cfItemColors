@@ -4,6 +4,11 @@ local questObjectiveCache = cfItemColors.questObjectiveCache
 -- Module constants
 local QUEST_LOG_TITLE_QUESTID = 8 -- GetQuestLogTitle() returns questID as 8th value
 
+local MISCLASSIFIED_QUEST_ITEMS = {
+	["Thunder Ale"] = 310,
+	["Kravel's Crate"] = 5762,
+}
+
 -- Extracts item objectives and special quest items from a quest
 local function extractQuestItems(questLogIndex)
 	local items = {}
@@ -25,10 +30,8 @@ local function extractQuestItems(questLogIndex)
 	-- Extract special quest items (usable items)
 	local specialItemLink = GetQuestLogSpecialItemInfo(questLogIndex)
 	if specialItemLink then
-		print("|cffff00ffFound special item link:|r", specialItemLink)
 		local itemName = specialItemLink:match("|h%[([^%]]+)%]|h")
 		if itemName then
-			print("|cffff00ffAdding special quest item:|r", itemName)
 			items[itemName] = true
 		end
 	end
@@ -43,9 +46,16 @@ local function createQuestCache()
 		local _, _, _, isHeader = GetQuestLogTitle(i)
 		if not isHeader then
 			local items, questID = extractQuestItems(i)
+
 			for itemName in pairs(items) do
 				questObjectiveCache[itemName] = questID
 			end
+
+			for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
+                if questID == misclassifiedQuestID then
+                    questObjectiveCache[itemName] = questID
+                end
+            end
 		end
 	end
 end
@@ -63,6 +73,12 @@ local function onQuestAccepted(questLogIndex)
 		questObjectiveCache[itemName] = questID
 	end
 
+	for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
+		if questID == misclassifiedQuestID then
+			questObjectiveCache[itemName] = questID
+		end
+	end
+
 	invalidateQuestCache()
 end
 
@@ -77,11 +93,15 @@ local function onQuestRemoved(questID)
 	invalidateQuestCache()
 end
 
+-- Track how many QUEST_LOG_UPDATEs to skip (for stale/incomplete data on initial login)
+local skipQuestLogUpdateCount = 0
+
 -- Event registration and handler
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_ACCEPTED")
 eventFrame:RegisterEvent("QUEST_REMOVED")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	if event == "QUEST_ACCEPTED" then
 		local questLogIndex = ...
@@ -90,6 +110,16 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 		local questID = ...
 		onQuestRemoved(questID)
 	elseif event == "PLAYER_ENTERING_WORLD" then
+		local isInitialLogin, isReloadingUI = ...
+		-- Skip first 2 QUEST_LOG_UPDATEs on login (stale data), but not on reload
+		skipQuestLogUpdateCount = isInitialLogin and 2 or 0
+	elseif event == "QUEST_LOG_UPDATE" then
+		if skipQuestLogUpdateCount > 0 then
+			skipQuestLogUpdateCount = skipQuestLogUpdateCount - 1
+			return
+		end
+		-- Initial cache build; subsequent updates handled by QUEST_ACCEPTED/REMOVED events
 		createQuestCache()
+		eventFrame:UnregisterEvent("QUEST_LOG_UPDATE")
 	end
 end)
