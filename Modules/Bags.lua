@@ -40,10 +40,6 @@ local function updateAllBagColors()
 	end
 end
 
-cfItemColors.onQuestObjectivesChanged = function()
-	updateAllBagColors()
-end
-
 -- Event registration for bag coloring
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")  -- Bag content changes (bags 0-10)
@@ -58,3 +54,6 @@ end)
 hooksecurefunc("OpenBag", function(bagId)
 	updateSingleBagColors(bagId)
 end)
+
+-- Register for quest cache change notifications
+cfItemColors.registerQuestChangeListener(updateAllBagColors)

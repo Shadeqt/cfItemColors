@@ -122,5 +122,15 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 	end
 end
 
--- Callback invoked when quest objectives change (cache updated)
-cfItemColors.onQuestObjectivesChanged = function() end
+-- Event bus for quest cache changes
+local questChangeListeners = {}
+
+cfItemColors.registerQuestChangeListener = function(callback)
+	table.insert(questChangeListeners, callback)
+end
+
+cfItemColors.onQuestObjectivesChanged = function()
+	for _, listener in ipairs(questChangeListeners) do
+		listener()
+	end
+end

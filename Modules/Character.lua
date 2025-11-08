@@ -34,9 +34,5 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 	end
 end)
 
--- Hook into quest cache updates to refresh equipment coloring
-local previousCallback = cfItemColors.onQuestObjectivesChanged
-cfItemColors.onQuestObjectivesChanged = function()
-	previousCallback()
-	updateAllEquipmentSlots()
-end
+-- Register for quest cache change notifications
+cfItemColors.registerQuestChangeListener(updateAllEquipmentSlots)
