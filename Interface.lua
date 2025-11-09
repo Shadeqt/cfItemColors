@@ -151,9 +151,7 @@ end
 -- This ensures Compatibility.lua is loaded before we check for conflicts
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function()
-	initializeCheckboxes()
-end)
+frame:SetScript("OnEvent", initializeCheckboxes)
 
 -- OnShow: Refresh checkboxes from database
 panel:SetScript("OnShow", initializeCheckboxes)
