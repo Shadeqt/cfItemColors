@@ -49,6 +49,13 @@ for _, name in ipairs(RAW_AH_ADDON_NAMES) do
 	KNOWN_AH_ADDONS[normalized] = true
 end
 
+-- Map module names to their conflict detection whitelists
+local MODULE_CONFLICT_MAP = {
+	Bags = KNOWN_BAG_ADDONS,
+	Bank = KNOWN_BAG_ADDONS,
+	AuctionHouse = KNOWN_AH_ADDONS,
+}
+
 -- Generic function to check if any addon in a whitelist is active
 local function isAddonTypeActive(whitelist)
 	for i = 1, C_AddOns.GetNumAddOns() do
@@ -84,47 +91,24 @@ local function isAddonTypeActive(whitelist)
 	return false, nil
 end
 
--- Public API functions
-function cfItemColors.Compatibility.IsBagAddonActive()
-	return isAddonTypeActive(KNOWN_BAG_ADDONS)
-end
-
-function cfItemColors.Compatibility.IsAuctionAddonActive()
-	return isAddonTypeActive(KNOWN_AH_ADDONS)
-end
-
--- Check if a specific module has a compatibility conflict
--- Returns: hasConflict (bool), reason (string|nil)
-function cfItemColors.Compatibility.CheckModuleConflict(moduleName)
-	if moduleName == "Bags" or moduleName == "Bank" then
-		local isConflict, addonName = cfItemColors.Compatibility.IsBagAddonActive()
-		if isConflict then
-			return true, addonName .. " detected"
-		end
-	elseif moduleName == "AuctionHouse" then
-		local isConflict, addonName = cfItemColors.Compatibility.IsAuctionAddonActive()
-		if isConflict then
-			return true, addonName .. " detected"
-		end
-	end
-	return false, nil
-end
-
 -- Determine if a module should load based on user settings and compatibility
 -- Returns: enabled (bool), reason (string|nil)
+-- reason is only returned for conflicts (to display in UI), not for user-disabled modules
 function cfItemColors.Compatibility.ShouldModuleLoad(moduleName)
 	-- Get user preference from DB
-	local settingKey = "enable" .. moduleName
-	local userEnabled = cfItemColorsDB[settingKey]
+	local userEnabled = cfItemColorsDB[moduleName]
 
 	if not userEnabled then
-		return false, "Disabled by user"
+		return false, nil  -- User disabled, no message needed
 	end
 
-	-- Check for conflicts
-	local hasConflict, reason = cfItemColors.Compatibility.CheckModuleConflict(moduleName)
-	if hasConflict then
-		return false, "Conflict: " .. reason
+	-- Check for conflicts using the mapping
+	local conflictList = MODULE_CONFLICT_MAP[moduleName]
+	if conflictList then
+		local isConflict, addonName = isAddonTypeActive(conflictList)
+		if isConflict then
+			return false, addonName .. " detected"
+		end
 	end
 
 	return true, nil
