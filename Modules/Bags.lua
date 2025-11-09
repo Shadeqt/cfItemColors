@@ -1,11 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableBags then return end
-
-local isConflict, conflictingAddon = cfItemColors.Compatibility.IsBagAddonActive()
-if isConflict then
-	print(conflictingAddon .. " has been detected. CfItemColors disabled bag module.")
-	return
-end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Bags")
+if not enabled then return end
 
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor

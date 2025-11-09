@@ -92,3 +92,40 @@ end
 function cfItemColors.Compatibility.IsAuctionAddonActive()
 	return isAddonTypeActive(KNOWN_AH_ADDONS)
 end
+
+-- Check if a specific module has a compatibility conflict
+-- Returns: hasConflict (bool), reason (string|nil)
+function cfItemColors.Compatibility.CheckModuleConflict(moduleName)
+	if moduleName == "Bags" or moduleName == "Bank" then
+		local isConflict, addonName = cfItemColors.Compatibility.IsBagAddonActive()
+		if isConflict then
+			return true, addonName .. " detected"
+		end
+	elseif moduleName == "AuctionHouse" then
+		local isConflict, addonName = cfItemColors.Compatibility.IsAuctionAddonActive()
+		if isConflict then
+			return true, addonName .. " detected"
+		end
+	end
+	return false, nil
+end
+
+-- Determine if a module should load based on user settings and compatibility
+-- Returns: enabled (bool), reason (string|nil)
+function cfItemColors.Compatibility.ShouldModuleLoad(moduleName)
+	-- Get user preference from DB
+	local settingKey = "enable" .. moduleName
+	local userEnabled = cfItemColorsDB[settingKey]
+
+	if not userEnabled then
+		return false, "Disabled by user"
+	end
+
+	-- Check for conflicts
+	local hasConflict, reason = cfItemColors.Compatibility.CheckModuleConflict(moduleName)
+	if hasConflict then
+		return false, "Conflict: " .. reason
+	end
+
+	return true, nil
+end

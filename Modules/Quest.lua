@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableQuest then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Quest")
+if not enabled then return end
 
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor

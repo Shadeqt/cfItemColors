@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableQuestObjective then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("QuestObjective")
+if not enabled then return end
 
 -- Shared dependencies
 local questObjectiveCache = cfItemColors.questObjectiveCache

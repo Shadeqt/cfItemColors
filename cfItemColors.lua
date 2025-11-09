@@ -1,22 +1,5 @@
 cfItemColors = {}
 
--- SavedVariables initialization
-if not cfItemColorsDB then
-	cfItemColorsDB = {
-		enableBags = true,
-		enableBank = true,
-		enableCharacter = true,
-		enableInspect = true,
-		enableLoot = true,
-		enableMailbox = true,
-		enableMerchant = true,
-		enableProfessions = true,
-		enableQuest = true,
-		enableQuestObjective = true,
-		enableTrade = true,
-	}
-end
-
 -- Shared dependencies
 cfItemColors.EQUIPMENT_SLOTS = {
 	"Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrist", "Hands",

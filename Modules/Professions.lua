@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableProfessions then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Professions")
+if not enabled then return end
 
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor

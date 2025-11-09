@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableTrade then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Trade")
+if not enabled then return end
 
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor

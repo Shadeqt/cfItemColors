@@ -1,3 +1,20 @@
+-- SavedVariables initialization
+if not cfItemColorsDB then
+	cfItemColorsDB = {
+		enableBags = true,
+		enableBank = true,
+		enableCharacter = true,
+		enableInspect = true,
+		enableLoot = true,
+		enableMailbox = true,
+		enableMerchant = true,
+		enableProfessions = true,
+		enableQuest = true,
+		enableQuestObjective = true,
+		enableTrade = true,
+	}
+end
+
 -- Settings panel frame
 local panel = CreateFrame("Frame", "cfItemColorsPanel")
 panel.name = "cfItemColors"
@@ -9,43 +26,52 @@ local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("cfItemColors Settings")
 
--- Helper function to create a checkbox
-local function createCheckbox(parent, anchorTo, xOffset, yOffset, dbKey, labelText)
+-- Helper function to create a checkbox (conflict detection deferred to initialization)
+local function createCheckbox(parent, anchorTo, xOffset, yOffset, dbKey, labelText, moduleName)
 	local check = CreateFrame("CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
 	check:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT", xOffset, yOffset)
 	check.Text:SetText(labelText)
 	check.dbKey = dbKey  -- Store the key for later use
-	check:SetScript("OnClick", function(self)
-		pendingState[self.dbKey] = self:GetChecked()
-	end)
+	check.moduleName = moduleName -- Store module name for conflict checking
+
+	-- OnClick handler will be set during initialization if no conflict
 	return check
 end
 
+-- Store all checkboxes for later initialization
+local allCheckboxes = {}
+
 -- Left column checkboxes
-local bagsCheck = createCheckbox(panel, title, 0, -16, "enableBags", "Enable Bags")
-local bankCheck = createCheckbox(panel, bagsCheck, 0, -8, "enableBank", "Enable Bank")
-local characterCheck = createCheckbox(panel, bankCheck, 0, -8, "enableCharacter", "Enable Character Sheet")
-local inspectCheck = createCheckbox(panel, characterCheck, 0, -8, "enableInspect", "Enable Inspect Window")
-local lootCheck = createCheckbox(panel, inspectCheck, 0, -8, "enableLoot", "Enable Loot Window")
+allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, "enableBags", "Bags", "Bags")
+allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, "enableBank", "Bank", "Bank")
+allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, "enableCharacter", "Character", "Character")
+allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, "enableInspect", "Inspect", "Inspect")
+allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, "enableLoot", "Loot", "Loot")
 
 -- Right column checkboxes
-local merchantCheck = createCheckbox(panel, title, 250, -16, "enableMerchant", "Enable Merchant")
-local professionsCheck = createCheckbox(panel, merchantCheck, 0, -8, "enableProfessions", "Enable Professions")
-local questCheck = createCheckbox(panel, professionsCheck, 0, -8, "enableQuest", "Enable Quest Window")
-local questObjectiveCheck = createCheckbox(panel, questCheck, 0, -8, "enableQuestObjective", "Enable Quest Objectives")
+allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, "enableMerchant", "Merchant", "Merchant")
+allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, "enableProfessions", "Professions", "Professions")
+allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, "enableQuest", "Quest", "Quest")
+allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, "enableQuestObjective", "Quest Objectives", "QuestObjective")
+
+-- Explanatory note for Quest Objectives
+local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+questObjNote:SetPoint("TOPLEFT", allCheckboxes.questObjectiveCheck, "BOTTOMLEFT", 20, -2)
+questObjNote:SetTextColor(0.7, 0.7, 0.7)
+questObjNote:SetText("Detects common items (materials, reagents, etc.) needed for active quests")
 
 -- Group 2 Header: Player Trading
 local group2Header = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-group2Header:SetPoint("TOPLEFT", lootCheck, "BOTTOMLEFT", 0, -16)
+group2Header:SetPoint("TOPLEFT", allCheckboxes.lootCheck, "BOTTOMLEFT", 0, -16)
 group2Header:SetText("|cffFFD700Player Trading:|r")
 
 -- Group 2 checkboxes (Player trading features) - in columns
-local tradeCheck = createCheckbox(panel, group2Header, 0, -8, "enableTrade", "Enable Trade Window")
-local mailboxCheck = createCheckbox(panel, group2Header, 250, -8, "enableMailbox", "Enable Mailbox")
+allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, "enableTrade", "Trade", "Trade")
+allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, "enableMailbox", "Mailbox", "Mailbox")
 
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-reloadBtn:SetPoint("TOPLEFT", tradeCheck, "BOTTOMLEFT", 0, -16)
+reloadBtn:SetPoint("TOPLEFT", allCheckboxes.tradeCheck, "BOTTOMLEFT", 0, -16)
 reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
@@ -66,7 +92,7 @@ local info = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 info:SetPoint("TOPLEFT", reloadBtn, "BOTTOMLEFT", 4, -8)
 info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
--- Function to initialize checkboxes from database
+-- Function to initialize checkboxes from database and apply conflict detection
 local function initializeCheckboxes()
 	-- Copy database to pending state
 	pendingState = {
@@ -83,22 +109,56 @@ local function initializeCheckboxes()
 		enableTrade = cfItemColorsDB.enableTrade,
 	}
 
-	-- Set checkboxes from pending state
-	bagsCheck:SetChecked(pendingState.enableBags)
-	bankCheck:SetChecked(pendingState.enableBank)
-	characterCheck:SetChecked(pendingState.enableCharacter)
-	inspectCheck:SetChecked(pendingState.enableInspect)
-	lootCheck:SetChecked(pendingState.enableLoot)
-	mailboxCheck:SetChecked(pendingState.enableMailbox)
-	merchantCheck:SetChecked(pendingState.enableMerchant)
-	professionsCheck:SetChecked(pendingState.enableProfessions)
-	questCheck:SetChecked(pendingState.enableQuest)
-	questObjectiveCheck:SetChecked(pendingState.enableQuestObjective)
-	tradeCheck:SetChecked(pendingState.enableTrade)
+	-- Configure each checkbox with conflict detection
+	for _, check in pairs(allCheckboxes) do
+		-- Check for conflicts (Compatibility.lua is now loaded)
+		local hasConflict, conflictReason = cfItemColors.Compatibility.CheckModuleConflict(check.moduleName)
+
+		if hasConflict then
+			-- Conflict detected - uncheck and disable checkbox, add warning
+			check:SetChecked(false)
+			check:Disable()
+
+			-- Gray out the label text
+			check.Text:SetTextColor(0.5, 0.5, 0.5)
+
+			-- Create warning text if not already created
+			if not check.warningText then
+				check.warningText = check:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+				check.warningText:SetPoint("LEFT", check.Text, "RIGHT", 4, 0)
+			end
+			check.warningText:SetText("|cffFF7F00(" .. conflictReason .. ")|r")
+
+			-- Set tooltip to explain the conflict
+			check.tooltipText = "This module cannot load due to " .. conflictReason .. ". Disable the conflicting addon to use this feature."
+		else
+			-- No conflict - set checked state from DB and enable checkbox
+			check:SetChecked(pendingState[check.dbKey])
+			check:Enable()
+
+			-- Restore normal label text color
+			check.Text:SetTextColor(1.0, 1.0, 1.0)
+
+			check:SetScript("OnClick", function(self)
+				pendingState[self.dbKey] = self:GetChecked()
+			end)
+
+			-- Hide warning text if it exists
+			if check.warningText then
+				check.warningText:SetText("")
+			end
+			check.tooltipText = nil
+		end
+	end
 end
 
--- Initialize immediately (fixes OnShow not firing on first open)
-initializeCheckboxes()
+-- Don't initialize immediately - wait for all addons to load
+-- This ensures Compatibility.lua is loaded before we check for conflicts
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:SetScript("OnEvent", function()
+	initializeCheckboxes()
+end)
 
 -- OnShow: Refresh checkboxes from database
 panel:SetScript("OnShow", initializeCheckboxes)

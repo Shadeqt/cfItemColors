@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableMerchant then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Merchant")
+if not enabled then return end
 
 -- Shared dependencies
 local applyQualityColor = cfItemColors.applyQualityColor

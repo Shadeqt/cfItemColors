@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableCharacter then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Character")
+if not enabled then return end
 
 -- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS

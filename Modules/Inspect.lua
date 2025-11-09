@@ -1,5 +1,6 @@
 -- Module enable check
-if not cfItemColorsDB.enableInspect then return end
+local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Inspect")
+if not enabled then return end
 
 -- Shared dependencies
 local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
