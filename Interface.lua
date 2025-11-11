@@ -1,19 +1,7 @@
--- SavedVariables initialization
-if not cfItemColorsDB then
-	cfItemColorsDB = {
-		Bags = true,
-		Bank = true,
-		Character = true,
-		Inspect = true,
-		Loot = true,
-		Mailbox = true,
-		Merchant = true,
-		Professions = true,
-		Quest = true,
-		QuestObjective = true,
-		Trade = true,
-	}
-end
+-- Local references to Init API
+local MODULES = cfItemColors.Init.MODULES
+local GetModuleState = cfItemColors.Init.GetModuleState
+local SetModuleEnabled = cfItemColors.Init.SetModuleEnabled
 
 -- Settings panel frame
 local panel = CreateFrame("Frame", "cfItemColorsPanel")
@@ -41,17 +29,17 @@ end
 local allCheckboxes = {}
 
 -- Left column checkboxes
-allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, "Bags")
-allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, "Bank")
-allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, "Character")
-allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, "Inspect")
-allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, "Loot")
+allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, MODULES.BAGS)
+allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, MODULES.BANK)
+allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, MODULES.CHARACTER)
+allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, MODULES.INSPECT)
+allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, MODULES.LOOT)
 
 -- Right column checkboxes
-allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, "Merchant")
-allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, "Professions")
-allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, "Quest")
-allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, "QuestObjective")
+allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, MODULES.MERCHANT)
+allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, MODULES.PROFESSIONS)
+allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, MODULES.QUEST)
+allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, MODULES.QUEST_OBJECTIVE)
 
 -- Explanatory note for Quest Objectives
 local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -65,8 +53,8 @@ group2Header:SetPoint("TOPLEFT", allCheckboxes.lootCheck, "BOTTOMLEFT", 0, -16)
 group2Header:SetText("|cffFFD700Player Trading:|r")
 
 -- Group 2 checkboxes (Player trading features) - in columns
-allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, "Trade")
-allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, "Mailbox")
+allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, MODULES.TRADE)
+allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, MODULES.MAILBOX)
 
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -74,9 +62,9 @@ reloadBtn:SetPoint("TOPLEFT", allCheckboxes.tradeCheck, "BOTTOMLEFT", 0, -16)
 reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
-	-- Commit pending changes to database
-	for key, value in pairs(pendingState) do
-		cfItemColorsDB[key] = value
+	-- Commit pending changes to database via Init API
+	for moduleName, enabled in pairs(pendingState) do
+		SetModuleEnabled(moduleName, enabled)
 	end
 	ReloadUI()
 end)
@@ -93,27 +81,18 @@ info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
 -- Function to initialize checkboxes from database and apply conflict detection
 local function initializeCheckboxes()
-	-- Copy database to pending state
-	pendingState = {
-		Bags = cfItemColorsDB.Bags,
-		Bank = cfItemColorsDB.Bank,
-		Character = cfItemColorsDB.Character,
-		Inspect = cfItemColorsDB.Inspect,
-		Loot = cfItemColorsDB.Loot,
-		Mailbox = cfItemColorsDB.Mailbox,
-		Merchant = cfItemColorsDB.Merchant,
-		Professions = cfItemColorsDB.Professions,
-		Quest = cfItemColorsDB.Quest,
-		QuestObjective = cfItemColorsDB.QuestObjective,
-		Trade = cfItemColorsDB.Trade,
-	}
+	-- Initialize pending state from Init API
+	pendingState = {}
+	for _, moduleName in pairs(MODULES) do
+		local enabled, conflict = GetModuleState(moduleName)
+		pendingState[moduleName] = enabled
+	end
 
 	-- Configure each checkbox with conflict detection
 	for _, check in pairs(allCheckboxes) do
-		-- Check if module should load (Compatibility.lua is now loaded)
-		local shouldLoad, reason = cfItemColors.Compatibility.ShouldModuleLoad(check.moduleName)
+		local enabled, conflict = GetModuleState(check.moduleName)
 
-		if not shouldLoad and reason then
+		if conflict then
 			-- Conflict detected - uncheck and disable checkbox, add warning
 			check:SetChecked(false)
 			check:Disable()
@@ -126,10 +105,10 @@ local function initializeCheckboxes()
 				check.warningText = check:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 				check.warningText:SetPoint("LEFT", check.Text, "RIGHT", 4, 0)
 			end
-			check.warningText:SetText("|cffFF7F00(" .. reason .. ")|r")
+			check.warningText:SetText("|cffFF7F00(" .. conflict .. ")|r")
 		else
 			-- No conflict - set checked state from DB and enable checkbox
-			check:SetChecked(pendingState[check.moduleName])
+			check:SetChecked(enabled)
 			check:Enable()
 
 			-- Restore normal label text color
@@ -148,7 +127,7 @@ local function initializeCheckboxes()
 end
 
 -- Don't initialize immediately - wait for all addons to load
--- This ensures Compatibility.lua is loaded before we check for conflicts
+-- This ensures Init.lua has processed conflicts before we display checkboxes
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", initializeCheckboxes)

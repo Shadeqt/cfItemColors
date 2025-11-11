@@ -1,5 +1,5 @@
 -- Module enable check
-local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Loot")
+local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.LOOT)
 if not enabled then return end
 
 -- Shared dependencies

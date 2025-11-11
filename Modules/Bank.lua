@@ -1,5 +1,5 @@
 -- Module enable check
-local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Bank")
+local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.BANK)
 if not enabled then return end
 
 -- Shared dependencies
@@ -14,6 +14,8 @@ local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes ba
 -- Updates a single bank slot with quality color
 local function updateSingleBankSlot(slotId)
 	local bankSlotButton = _G["BankFrameItem" .. slotId]
+	if not bankSlotButton then return end
+	
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
 	applyQualityColor(bankSlotButton, containerItemId)
 end

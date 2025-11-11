@@ -1,5 +1,5 @@
 -- Module enable check
-local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Mailbox")
+local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.MAILBOX)
 if not enabled then return end
 
 local applyQualityColor = cfItemColors.applyQualityColor

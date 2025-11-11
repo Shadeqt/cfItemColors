@@ -1,5 +1,5 @@
 -- Module enable check
-local enabled = cfItemColors.Compatibility.ShouldModuleLoad("Quest")
+local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.QUEST)
 if not enabled then return end
 
 -- Shared dependencies

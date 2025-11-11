@@ -7,8 +7,9 @@
 
 # Core module (must load first)
 cfItemColors.lua
-Interface.lua
 Compatibility.lua
+Init.lua
+Interface.lua
 
 # Domain modules
 #Modules\AuctionHouse.lua
