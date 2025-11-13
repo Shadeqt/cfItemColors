@@ -1,10 +1,13 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Settings panel frame
 local panel = CreateFrame("Frame", "cfItemColorsPanel")
 panel.name = "cfItemColors"
 
 -- Module state
-local pendingState = {}
 local allCheckboxes = {}
+local pendingState = {}
 
 -- Creates a checkbox for a module (conflict detection deferred to initialization)
 local function createCheckbox(parent, anchorTo, xOffset, yOffset, moduleName)
@@ -23,17 +26,17 @@ title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("cfItemColors Settings")
 
 -- Left column checkboxes
-allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, cfItemColors.MODULES.BAGS)
-allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, cfItemColors.MODULES.BANK)
-allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, cfItemColors.MODULES.CHARACTER)
-allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, cfItemColors.MODULES.INSPECT)
-allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, cfItemColors.MODULES.LOOT)
+allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, addon.MODULES.BAGS)
+allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, addon.MODULES.BANK)
+allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, addon.MODULES.CHARACTER)
+allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, addon.MODULES.INSPECT)
+allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, addon.MODULES.LOOT)
 
 -- Right column checkboxes
-allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, cfItemColors.MODULES.MERCHANT)
-allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, cfItemColors.MODULES.PROFESSIONS)
-allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, cfItemColors.MODULES.QUEST)
-allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, cfItemColors.MODULES.QUEST_OBJECTIVE)
+allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, addon.MODULES.MERCHANT)
+allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, addon.MODULES.PROFESSIONS)
+allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, addon.MODULES.QUEST)
+allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, addon.MODULES.QUEST_OBJECTIVE)
 
 -- Explanatory note for Quest Objectives
 local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -47,8 +50,8 @@ group2Header:SetPoint("TOPLEFT", allCheckboxes.lootCheck, "BOTTOMLEFT", 0, -16)
 group2Header:SetText("|cffFFD700Player Trading:|r")
 
 -- Group 2 checkboxes (Player trading features) - in columns
-allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, cfItemColors.MODULES.TRADE)
-allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, cfItemColors.MODULES.MAILBOX)
+allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, addon.MODULES.TRADE)
+allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, addon.MODULES.MAILBOX)
 
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -56,9 +59,9 @@ reloadBtn:SetPoint("TOPLEFT", allCheckboxes.tradeCheck, "BOTTOMLEFT", 0, -16)
 reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
-	-- Commit pending changes to database via Init API
+	-- Commit pending changes to database
 	for moduleName, enabled in pairs(pendingState) do
-		cfItemColors.SetModuleEnabled(moduleName, enabled)
+		db[moduleName].enabled = enabled
 	end
 	ReloadUI()
 end)
@@ -75,18 +78,19 @@ info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
 -- Initializes all checkboxes from database with conflict detection
 local function initializeCheckboxes()
-	-- Clear and repopulate pending state from Init API
+	-- Clear and repopulate pending state from database
 	for k in pairs(pendingState) do
 		pendingState[k] = nil
 	end
-	for _, moduleName in pairs(cfItemColors.MODULES) do
-		local enabled, conflict = cfItemColors.GetModuleState(moduleName)
-		pendingState[moduleName] = enabled
+	for _, moduleName in pairs(addon.MODULES) do
+		local moduleData = db[moduleName]
+		pendingState[moduleName] = moduleData.enabled
 	end
 
 	-- Configure each checkbox with conflict detection
 	for _, check in pairs(allCheckboxes) do
-		local enabled, conflict = cfItemColors.GetModuleState(check.moduleName)
+		local moduleData = db[check.moduleName]
+		local enabled, conflict = moduleData.enabled, moduleData.conflict
 
 		if conflict then
 			-- Conflict detected - uncheck and disable checkbox, add warning

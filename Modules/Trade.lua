@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.TRADE)
-if not enabled then return end
+if not db[addon.MODULES.TRADE].enabled then return end
 
 -- WoW constants
 local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player
@@ -9,14 +11,14 @@ local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player
 local function updatePlayerTradeSlot(slotIndex)
 	local button = _G["TradePlayerItem" .. slotIndex .. "ItemButton"]
 	local itemLink = GetTradePlayerItemLink(slotIndex)
-	cfItemColors.applyQualityColor(button, itemLink)
+	addon.applyQualityColor(button, itemLink)
 end
 
 -- Updates a single target trade slot
 local function updateTargetTradeSlot(slotIndex)
 	local button = _G["TradeRecipientItem" .. slotIndex .. "ItemButton"]
 	local itemLink = GetTradeTargetItemLink(slotIndex)
-	cfItemColors.applyQualityColor(button, itemLink)
+	addon.applyQualityColor(button, itemLink)
 end
 
 -- Updates all trade slots for both players

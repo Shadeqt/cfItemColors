@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.BAGS)
-if not enabled then return end
+if not db[addon.MODULES.BAGS].enabled then return end
 
 -- WoW constants
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS 		-- 4, player bag slots (excludes backpack slot 0)
@@ -20,7 +22,7 @@ local function updateSingleBagColors(bagId)
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
-			cfItemColors.applyQualityColor(bagItemButton, containerItemId)
+			addon.applyQualityColor(bagItemButton, containerItemId)
 		end
 	end
 end
@@ -41,4 +43,4 @@ hooksecurefunc("ToggleBag", updateSingleBagColors)  -- User clicks bag icons or 
 hooksecurefunc("OpenBag", updateSingleBagColors)  	-- System-opened bags (vendor, mail, bank)
 
 -- Register for quest cache change notifications
-cfItemColors.registerQuestChangeListener(updateAllBagColors)
+addon.registerQuestChangeListener(updateAllBagColors)

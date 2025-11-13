@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.PROFESSIONS)
-if not enabled then return end
+if not db[addon.MODULES.PROFESSIONS].enabled then return end
 
 -- Module constants
 local NUM_REAGENT_SLOTS = 8 -- 8, maximum reagent slots in tradeskill window
@@ -12,14 +14,14 @@ local function updateTradeSkillItems()
 	-- Update crafted item
 	local craftedItemButton = _G["TradeSkillSkillIcon"]
 	local itemLink = GetTradeSkillItemLink(selectedIndex)
-	cfItemColors.applyQualityColor(craftedItemButton, itemLink)
+	addon.applyQualityColor(craftedItemButton, itemLink)
 
 	-- Update reagents
 	local numReagents = GetTradeSkillNumReagents(selectedIndex)
 	for i = 1, numReagents do
 		local button = _G["TradeSkillReagent" .. i]
 		local reagentLink = GetTradeSkillReagentItemLink(selectedIndex, i)
-		cfItemColors.applyQualityColor(button, reagentLink)
+		addon.applyQualityColor(button, reagentLink)
 	end
 end
 
@@ -33,7 +35,7 @@ local function updateClassTrainerIcon()
 
 	trainerScanTooltip:SetTrainerService(selectedIndex)
 	local _, itemLink = trainerScanTooltip:GetItem()
-	cfItemColors.applyQualityColor(classTrainerIconButton, itemLink)
+	addon.applyQualityColor(classTrainerIconButton, itemLink)
 end
 
 -- Initialize profession UI hooks and handle class trainer events

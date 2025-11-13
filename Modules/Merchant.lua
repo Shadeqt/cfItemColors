@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.MERCHANT)
-if not enabled then return end
+if not db[addon.MODULES.MERCHANT].enabled then return end
 
 -- WoW constants
 local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10, items displayed per merchant page
@@ -18,14 +20,14 @@ local function updateMerchantItems()
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemIndex = pageOffset + i
 		local itemLink = GetMerchantItemLink(itemIndex)
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 
 	-- Update buyback preview button
 	local buybackPreviewButton = _G["MerchantBuyBackItemItemButton"]
 	local numBuybackItems = GetNumBuybackItems()
 	local buybackLink = GetBuybackItemLink(numBuybackItems)
-	cfItemColors.applyQualityColor(buybackPreviewButton, buybackLink)
+	addon.applyQualityColor(buybackPreviewButton, buybackLink)
 end
 
 -- Updates buyback tab item buttons
@@ -35,7 +37,7 @@ local function updateBuybackItems()
 	for i = 1, numBuybackItems do
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemLink = GetBuybackItemLink(i)
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 end
 

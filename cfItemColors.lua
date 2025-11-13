@@ -1,13 +1,13 @@
-cfItemColors = {}
+local addon = cfItemColors
 
 -- Shared dependencies
-cfItemColors.EQUIPMENT_SLOTS = {
+addon.EQUIPMENT_SLOTS = {
 	"Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrist", "Hands",
 	"Finger0", "Finger1", "Trinket0", "Trinket1", "Back", "MainHand", "SecondaryHand", "Ranged", "Tabard"
 }
 
-cfItemColors.questObjectiveCache = {}
-cfItemColors.questCacheVersion = 0
+addon.questObjectiveCache = {}
+addon.questCacheVersion = 0
 
 -- Event bus for quest cache changes
 local questChangeListeners = {}
@@ -22,7 +22,7 @@ local function isQuestItem(itemType, itemClassId, itemName)
 		return true
 	end
 
-	if cfItemColors.questObjectiveCache[itemName] then
+	if addon.questObjectiveCache[itemName] then
 		return true
 	end
 
@@ -74,14 +74,14 @@ local function hideBorder(button)
 end
 
 -- Applies quality-based border color to button or hides border for common items
-function cfItemColors.applyQualityColor(button, itemIdOrLink)
+function addon.applyQualityColor(button, itemIdOrLink)
 	if not itemIdOrLink then
 		hideBorder(button)
 		button.itemIdOrLink = nil
 		return
 	end
 
-	if button.itemIdOrLink == itemIdOrLink and button.questCacheVersion == cfItemColors.questCacheVersion then
+	if button.itemIdOrLink == itemIdOrLink and button.questCacheVersion == addon.questCacheVersion then
 		return
 	end
 
@@ -91,7 +91,7 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 	end
 
 	button.itemIdOrLink = itemIdOrLink
-	button.questCacheVersion = cfItemColors.questCacheVersion
+	button.questCacheVersion = addon.questCacheVersion
 
 	-- Upgrade quest items to special quality (99 = custom quest quality)
 	if itemQuality <= 1 and isQuestItem(itemType, itemClassId, itemName) then
@@ -107,12 +107,12 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 end
 
 -- Registers callback to be notified when quest objectives change
-cfItemColors.registerQuestChangeListener = function(callback)
+addon.registerQuestChangeListener = function(callback)
 	table.insert(questChangeListeners, callback)
 end
 
 -- Notifies all registered listeners that quest objectives have changed
-cfItemColors.onQuestObjectivesChanged = function()
+addon.onQuestObjectivesChanged = function()
 	for _, listener in ipairs(questChangeListeners) do
 		listener()
 	end

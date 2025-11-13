@@ -1,18 +1,20 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.INSPECT)
-if not enabled then return end
+if not db[addon.MODULES.INSPECT].enabled then return end
 
 -- Updates a single inspect equipment slot
 local function updateSingleInspectSlot(slotId)
-	local equipmentSlot = cfItemColors.EQUIPMENT_SLOTS[slotId]
+	local equipmentSlot = addon.EQUIPMENT_SLOTS[slotId]
 	local inspectButton = _G["Inspect" .. equipmentSlot .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("target", slotId)
-	cfItemColors.applyQualityColor(inspectButton, inventoryItemLink)
+	addon.applyQualityColor(inspectButton, inventoryItemLink)
 end
 
 -- Updates all inspect equipment slots
 local function updateAllInspectSlots()
-	for i = 1, #cfItemColors.EQUIPMENT_SLOTS do
+	for i = 1, #addon.EQUIPMENT_SLOTS do
 		updateSingleInspectSlot(i)
 	end
 end

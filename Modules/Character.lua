@@ -1,18 +1,20 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.CHARACTER)
-if not enabled then return end
+if not db[addon.MODULES.CHARACTER].enabled then return end
 
 -- Updates a single character equipment slot
 local function updateSingleEquipmentSlot(slotId)
-	local equipmentSlot = cfItemColors.EQUIPMENT_SLOTS[slotId]
+	local equipmentSlot = addon.EQUIPMENT_SLOTS[slotId]
 	local equipmentButton = _G["Character" .. equipmentSlot .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
-	cfItemColors.applyQualityColor(equipmentButton, inventoryItemLink)
+	addon.applyQualityColor(equipmentButton, inventoryItemLink)
 end
 
 -- Updates all character equipment slots
 local function updateAllEquipmentSlots()
-	for i = 1, #cfItemColors.EQUIPMENT_SLOTS do
+	for i = 1, #addon.EQUIPMENT_SLOTS do
 		updateSingleEquipmentSlot(i)
 	end
 end
@@ -30,4 +32,4 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 end)
 
 -- Register for quest cache change notifications
-cfItemColors.registerQuestChangeListener(updateAllEquipmentSlots)
+addon.registerQuestChangeListener(updateAllEquipmentSlots)

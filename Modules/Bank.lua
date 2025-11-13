@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.BANK)
-if not enabled then return end
+if not db[addon.MODULES.BANK].enabled then return end
 
 -- WoW constants
 local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main bank storage
@@ -12,9 +14,9 @@ local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes ba
 local function updateSingleBankSlot(slotId)
 	local bankSlotButton = _G["BankFrameItem" .. slotId]
 	if not bankSlotButton then return end
-	
+
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
-	cfItemColors.applyQualityColor(bankSlotButton, containerItemId)
+	addon.applyQualityColor(bankSlotButton, containerItemId)
 end
 
 -- Updates all bank container slots

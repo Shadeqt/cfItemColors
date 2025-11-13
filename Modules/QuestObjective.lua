@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.QUEST_OBJECTIVE)
-if not enabled then return end
+if not db[addon.MODULES.QUEST_OBJECTIVE].enabled then return end
 
 -- Module constants
 local QUEST_LOG_TITLE_QUESTID = 8 -- GetQuestLogTitle() returns questID as 8th value
@@ -43,8 +45,8 @@ end
 
 -- Increments cache version and notifies listeners
 local function invalidateQuestCache()
-	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
-	cfItemColors.onQuestObjectivesChanged()
+	addon.questCacheVersion = addon.questCacheVersion + 1
+	addon.onQuestObjectivesChanged()
 end
 
 -- Builds complete quest item cache from all active quests
@@ -56,12 +58,12 @@ local function createQuestCache()
 			local items, questID = extractQuestItems(i)
 
 			for itemName in pairs(items) do
-				cfItemColors.questObjectiveCache[itemName] = questID
+				addon.questObjectiveCache[itemName] = questID
 			end
 
 			for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
                 if questID == misclassifiedQuestID then
-                    cfItemColors.questObjectiveCache[itemName] = questID
+                    addon.questObjectiveCache[itemName] = questID
                 end
             end
 		end
@@ -73,12 +75,12 @@ end
 local function onQuestAccepted(questLogIndex)
 	local items, questID = extractQuestItems(questLogIndex)
 	for itemName in pairs(items) do
-		cfItemColors.questObjectiveCache[itemName] = questID
+		addon.questObjectiveCache[itemName] = questID
 	end
 
 	for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
 		if questID == misclassifiedQuestID then
-			cfItemColors.questObjectiveCache[itemName] = questID
+			addon.questObjectiveCache[itemName] = questID
 		end
 	end
 
@@ -87,9 +89,9 @@ end
 
 -- Removes items from abandoned or completed quest from cache
 local function onQuestRemoved(questID)
-	for itemName, ownerID in pairs(cfItemColors.questObjectiveCache) do
+	for itemName, ownerID in pairs(addon.questObjectiveCache) do
 		if ownerID == questID then
-			cfItemColors.questObjectiveCache[itemName] = nil
+			addon.questObjectiveCache[itemName] = nil
 		end
 	end
 

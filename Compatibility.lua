@@ -1,4 +1,5 @@
-cfItemColors.Compatibility = {}
+local addon = cfItemColors
+local db = cfItemColorsDB
 
 -- Raw bag addon names (readable format with spaces/hyphens/numbers)
 local RAW_BAG_ADDON_NAMES = {
@@ -91,23 +92,14 @@ local function isAddonTypeActive(whitelist)
 	return false, nil
 end
 
--- Determines if module should load based on settings and conflicts (returns enabled, conflict)
-function cfItemColors.Compatibility.ShouldModuleLoad(moduleName)
-	-- Get user preference from DB
-	local userEnabled = cfItemColorsDB[moduleName]
-
-	if not userEnabled then
-		return false, nil  -- User disabled, no message needed
-	end
-
-	-- Check for conflicts using the mapping
+-- Run conflict detection and update database
+for moduleName, _ in pairs(addon.MODULES) do
 	local conflictList = MODULE_CONFLICT_MAP[moduleName]
 	if conflictList then
 		local isConflict, addonName = isAddonTypeActive(conflictList)
 		if isConflict then
-			return false, addonName .. " detected"
+			db[moduleName].enabled = false
+			db[moduleName].conflict = addonName .. " detected"
 		end
 	end
-
-	return true, nil
 end

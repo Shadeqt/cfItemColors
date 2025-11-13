@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.QUEST)
-if not enabled then return end
+if not db[addon.MODULES.QUEST].enabled then return end
 
 -- Updates quest reward buttons (choices and guaranteed rewards)
 local function updateQuestRewards(buttonPrefix)
@@ -20,7 +22,7 @@ local function updateQuestRewards(buttonPrefix)
 		else
 			itemLink = getItemLink("reward", i - numChoices)
 		end
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 end
 
@@ -30,7 +32,7 @@ local function updateQuestRequiredItems()
 	for i = 1, numItems do
 		local button = _G["QuestProgressItem" .. i]
 		local itemLink = GetQuestItemLink("required", i)
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 end
 

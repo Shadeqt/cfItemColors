@@ -5,14 +5,15 @@
 ## Version:   1.0
 ## SavedVariables: cfItemColorsDB
 
-# Core module (must load first)
-cfItemColors.lua
-Compatibility.lua
+# Core modules (load order matters)
 Init.lua
+Compatibility.lua
+cfItemColors.lua
 Interface.lua
 
 # Domain modules
 #Modules\AuctionHouse.lua
+Modules\QuestObjective.lua
 Modules\Bags.lua
 Modules\Bank.lua
 Modules\Character.lua
@@ -22,5 +23,4 @@ Modules\Mailbox.lua
 Modules\Merchant.lua
 Modules\Professions.lua
 Modules\Quest.lua
-Modules\QuestObjective.lua
 Modules\Trade.lua

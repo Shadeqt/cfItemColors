@@ -1,6 +1,8 @@
+local db = cfItemColorsDB
+local addon = cfItemColors
+
 -- Module enable check
-local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.MAILBOX)
-if not enabled then return end
+if not db[addon.MODULES.MAILBOX].enabled then return end
 
 -- WoW constants
 local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
@@ -29,7 +31,7 @@ local function updateInboxItems()
 			end
 		end
 
-		cfItemColors.applyQualityColor(button, bestItemLink)
+		addon.applyQualityColor(button, bestItemLink)
 	end
 end
 
@@ -38,7 +40,7 @@ local function updateSendMailItems()
 	for i = 1, ATTACHMENTS_MAX_SEND do
 		local button = _G["SendMailAttachment" .. i]
 		local itemLink = GetSendMailItemLink(i)
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 end
 
@@ -50,7 +52,7 @@ local function updateOpenMailItems()
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
 		local button = _G["OpenMailAttachmentButton" .. i]
 		local itemLink = GetInboxItemLink(mailId, i)
-		cfItemColors.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink)
 	end
 end
 
