@@ -31,7 +31,7 @@ local RAW_AH_ADDON_NAMES = {
 	"AuctionFaster",
 }
 
--- Normalizes addon names: trim, lowercase, strip separators/numbers
+-- Normalizes addon name for comparison (trim, lowercase, strip separators/numbers)
 local function normalizeAddonName(str)
 	return str:gsub("^%s*(.-)%s*$", "%1"):lower():gsub("[%s%-_%d]", "")
 end
@@ -56,7 +56,7 @@ local MODULE_CONFLICT_MAP = {
 	AuctionHouse = KNOWN_AH_ADDONS,
 }
 
--- Generic function to check if any addon in a whitelist is active
+-- Checks if any addon from whitelist is active (returns isActive, addonName)
 local function isAddonTypeActive(whitelist)
 	for i = 1, C_AddOns.GetNumAddOns() do
 		if C_AddOns.IsAddOnLoaded(i) then
@@ -91,9 +91,7 @@ local function isAddonTypeActive(whitelist)
 	return false, nil
 end
 
--- Determine if a module should load based on user settings and compatibility
--- Returns: enabled (bool), reason (string|nil)
--- reason is only returned for conflicts (to display in UI), not for user-disabled modules
+-- Determines if module should load based on settings and conflicts (returns enabled, conflict)
 function cfItemColors.Compatibility.ShouldModuleLoad(moduleName)
 	-- Get user preference from DB
 	local userEnabled = cfItemColorsDB[moduleName]

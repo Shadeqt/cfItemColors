@@ -1,14 +1,11 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.MERCHANT)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.MERCHANT)
 if not enabled then return end
-
--- Shared dependencies
-local applyQualityColor = cfItemColors.applyQualityColor
 
 -- WoW constants
 local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10, items displayed per merchant page
 
--- Updates merchant item buttons and buyback preview for current page
+-- Updates merchant items and buyback preview for current page
 local function updateMerchantItems()
 	local currentPage = MerchantFrame.page
 	local pageOffset = (currentPage - 1) * MERCHANT_ITEMS_PER_PAGE
@@ -21,14 +18,14 @@ local function updateMerchantItems()
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemIndex = pageOffset + i
 		local itemLink = GetMerchantItemLink(itemIndex)
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 
 	-- Update buyback preview button
 	local buybackPreviewButton = _G["MerchantBuyBackItemItemButton"]
 	local numBuybackItems = GetNumBuybackItems()
 	local buybackLink = GetBuybackItemLink(numBuybackItems)
-	applyQualityColor(buybackPreviewButton, buybackLink)
+	cfItemColors.applyQualityColor(buybackPreviewButton, buybackLink)
 end
 
 -- Updates buyback tab item buttons
@@ -38,10 +35,9 @@ local function updateBuybackItems()
 	for i = 1, numBuybackItems do
 		local button = _G["MerchantItem" .. i .. "ItemButton"]
 		local itemLink = GetBuybackItemLink(i)
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 end
 
--- Hook merchant updates
-hooksecurefunc("MerchantFrame_UpdateMerchantInfo", updateMerchantItems)
-hooksecurefunc("MerchantFrame_UpdateBuybackInfo", updateBuybackItems)
+hooksecurefunc("MerchantFrame_UpdateMerchantInfo", updateMerchantItems) -- Merchant tab updates
+hooksecurefunc("MerchantFrame_UpdateBuybackInfo", updateBuybackItems)	-- Buyback tab updates

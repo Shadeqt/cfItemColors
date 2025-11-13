@@ -1,7 +1,5 @@
-cfItemColors.Init = {}
-
 -- Module name constants
-cfItemColors.Init.MODULES = {
+cfItemColors.MODULES = {
 	BAGS = "Bags",
 	BANK = "Bank",
 	CHARACTER = "Character",
@@ -18,7 +16,7 @@ cfItemColors.Init.MODULES = {
 -- WoW constants
 local BUFF_MAX_DISPLAY = BUFF_MAX_DISPLAY -- 32, max buffs on player
 
--- Detect self-found adventurer by spell ID
+-- Detects if player has self-found adventurer buff
 local function isPlayerSelfFound()
 	for i = 1, BUFF_MAX_DISPLAY do
 		local _, _, _, _, _, _, _, _, _, spellId = UnitBuff("player", i)
@@ -28,10 +26,10 @@ local function isPlayerSelfFound()
 	return false
 end
 
--- Event frame for deferred initialization
+-- Initialize database and run conflict detection on first login
 local initFrame = CreateFrame("Frame")
 
-initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  -- Deferred initialization check
 initFrame:SetScript("OnEvent", function(self, event)
 	-- Wait 1 second for buffs to load, then check
 	C_Timer.After(1, function()
@@ -40,10 +38,8 @@ initFrame:SetScript("OnEvent", function(self, event)
 
 		-- Initialize database on first load (buffs are now available)
 		if not cfItemColorsDB then
-			local isSelfFound = isPlayerSelfFound()
-
 			cfItemColorsDB = {}
-			for _, moduleName in pairs(cfItemColors.Init.MODULES) do
+			for _, moduleName in pairs(cfItemColors.MODULES) do
 				cfItemColorsDB[moduleName] = {
 					enabled = true,
 					conflict = nil
@@ -51,22 +47,22 @@ initFrame:SetScript("OnEvent", function(self, event)
 			end
 
 			-- Self-found: disable trade/mailbox by default
-			if isSelfFound then
-				cfItemColorsDB[cfItemColors.Init.MODULES.TRADE].enabled = false
-				cfItemColorsDB[cfItemColors.Init.MODULES.MAILBOX].enabled = false
+			if isPlayerSelfFound() then
+				cfItemColorsDB[cfItemColors.MODULES.TRADE].enabled = false
+				cfItemColorsDB[cfItemColors.MODULES.MAILBOX].enabled = false
 			end
 		end
 
 		-- Refresh conflict detection (runs every load)
-		for _, moduleName in pairs(cfItemColors.Init.MODULES) do
+		for _, moduleName in pairs(cfItemColors.MODULES) do
 			local _, conflictAddon = cfItemColors.Compatibility.ShouldModuleLoad(moduleName)
 			cfItemColorsDB[moduleName].conflict = conflictAddon
 		end
 	end)
 end)
 
--- API: Get module state (returns enabled, conflict)
-function cfItemColors.Init.GetModuleState(moduleName)
+-- Returns module state (enabled, conflict) from database
+function cfItemColors.GetModuleState(moduleName)
 	-- DB might not exist yet during file load (before PLAYER_LOGIN)
 	if not cfItemColorsDB then return true, nil end
 	local data = cfItemColorsDB[moduleName]
@@ -74,8 +70,8 @@ function cfItemColors.Init.GetModuleState(moduleName)
 	return data.enabled, data.conflict
 end
 
--- API: Set module enabled state
-function cfItemColors.Init.SetModuleEnabled(moduleName, enabled)
+-- Updates module enabled state in database
+function cfItemColors.SetModuleEnabled(moduleName, enabled)
 	if cfItemColorsDB[moduleName] then
 		cfItemColorsDB[moduleName].enabled = enabled
 	end

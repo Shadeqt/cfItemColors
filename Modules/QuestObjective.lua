@@ -1,19 +1,17 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.QUEST_OBJECTIVE)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.QUEST_OBJECTIVE)
 if not enabled then return end
-
--- Shared dependencies
-local questObjectiveCache = cfItemColors.questObjectiveCache
 
 -- Module constants
 local QUEST_LOG_TITLE_QUESTID = 8 -- GetQuestLogTitle() returns questID as 8th value
 
+-- Quest-related items missing proper classification
 local MISCLASSIFIED_QUEST_ITEMS = {
 	["Thunder Ale"] = 310,
 	["Kravel's Crate"] = 5762,
 }
 
--- Extracts item objectives and special quest items from a quest
+-- Extracts item objectives and special quest items from quest log entry
 local function extractQuestItems(questLogIndex)
 	local items = {}
 	local questID = select(QUEST_LOG_TITLE_QUESTID, GetQuestLogTitle(questLogIndex))
@@ -43,13 +41,13 @@ local function extractQuestItems(questLogIndex)
 	return items, questID
 end
 
--- Increments cache version and triggers bag refresh
+-- Increments cache version and notifies listeners
 local function invalidateQuestCache()
 	cfItemColors.questCacheVersion = cfItemColors.questCacheVersion + 1
 	cfItemColors.onQuestObjectivesChanged()
 end
 
--- Builds complete quest item cache on login
+-- Builds complete quest item cache from all active quests
 local function createQuestCache()
 	local numQuests = GetNumQuestLogEntries()
 	for i = 1, numQuests do
@@ -58,12 +56,12 @@ local function createQuestCache()
 			local items, questID = extractQuestItems(i)
 
 			for itemName in pairs(items) do
-				questObjectiveCache[itemName] = questID
+				cfItemColors.questObjectiveCache[itemName] = questID
 			end
 
 			for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
                 if questID == misclassifiedQuestID then
-                    questObjectiveCache[itemName] = questID
+                    cfItemColors.questObjectiveCache[itemName] = questID
                 end
             end
 		end
@@ -75,23 +73,23 @@ end
 local function onQuestAccepted(questLogIndex)
 	local items, questID = extractQuestItems(questLogIndex)
 	for itemName in pairs(items) do
-		questObjectiveCache[itemName] = questID
+		cfItemColors.questObjectiveCache[itemName] = questID
 	end
 
 	for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
 		if questID == misclassifiedQuestID then
-			questObjectiveCache[itemName] = questID
+			cfItemColors.questObjectiveCache[itemName] = questID
 		end
 	end
 
 	invalidateQuestCache()
 end
 
--- Removes items belonging to abandoned/completed quest from cache
+-- Removes items from abandoned or completed quest from cache
 local function onQuestRemoved(questID)
-	for itemName, ownerID in pairs(questObjectiveCache) do
+	for itemName, ownerID in pairs(cfItemColors.questObjectiveCache) do
 		if ownerID == questID then
-			questObjectiveCache[itemName] = nil
+			cfItemColors.questObjectiveCache[itemName] = nil
 		end
 	end
 
@@ -101,12 +99,12 @@ end
 -- Track how many QUEST_LOG_UPDATEs to skip (for stale/incomplete data on initial login)
 local skipQuestLogUpdateCount = 0
 
--- Event registration and handler
+-- Build and maintain quest objective cache from quest log
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("QUEST_ACCEPTED")
-eventFrame:RegisterEvent("QUEST_REMOVED")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+eventFrame:RegisterEvent("QUEST_ACCEPTED")  		-- Quest accepted
+eventFrame:RegisterEvent("QUEST_REMOVED")  			-- Quest abandoned or completed
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  	-- Login (controls skip counter)
+eventFrame:RegisterEvent("QUEST_LOG_UPDATE")  		-- Quest log updated (first update only)
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	if event == "QUEST_ACCEPTED" then
 		local questLogIndex = ...

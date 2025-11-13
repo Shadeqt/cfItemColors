@@ -9,14 +9,12 @@ cfItemColors.EQUIPMENT_SLOTS = {
 cfItemColors.questObjectiveCache = {}
 cfItemColors.questCacheVersion = 0
 
--- Module states
-local questObjectiveCache = cfItemColors.questObjectiveCache
+-- Event bus for quest cache changes
+local questChangeListeners = {}
 
+-- Blizzard's global table containing RGB color values for each item quality tier
 local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
-local QUALITY_COMMON    = 1 -- White
-local QUALITY_UNCOMMON  = 2 -- Green
-local QUALITY_QUEST 	= 99
-QUALITY_COLORS[QUALITY_QUEST] = {r = 1.0, g = 0.82, b = 0.0}
+QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0} -- Custom gold color for quest items
 
 -- Determines if an item is quest-related based on type, class, or cache
 local function isQuestItem(itemType, itemClassId, itemName)
@@ -24,14 +22,14 @@ local function isQuestItem(itemType, itemClassId, itemName)
 		return true
 	end
 
-	if questObjectiveCache[itemName] then
+	if cfItemColors.questObjectiveCache[itemName] then
 		return true
 	end
 
 	return false
 end
 
--- Creates and configures a custom border texture for a button
+-- Creates or returns existing colored border texture overlay for an item button
 local function createBorder(button)
 	if button.border then
 		return button.border
@@ -51,6 +49,7 @@ local function createBorder(button)
 	return border
 end
 
+-- Shows colored border on item button based on quality
 local function showBorder(button, itemQuality)
 	if button.itemQuality == itemQuality then
 		return
@@ -65,6 +64,7 @@ local function showBorder(button, itemQuality)
 	button.itemQuality = itemQuality
 end
 
+-- Hides border and clears quality state from button
 local function hideBorder(button)
 	if button.border then
 		button.border:Hide()
@@ -73,6 +73,7 @@ local function hideBorder(button)
 	button.itemQuality = nil
 end
 
+-- Applies quality-based border color to button or hides border for common items
 function cfItemColors.applyQualityColor(button, itemIdOrLink)
 	if not itemIdOrLink then
 		hideBorder(button)
@@ -92,26 +93,25 @@ function cfItemColors.applyQualityColor(button, itemIdOrLink)
 	button.itemIdOrLink = itemIdOrLink
 	button.questCacheVersion = cfItemColors.questCacheVersion
 
-	-- Upgrade quest items to special quality
-	if itemQuality <= QUALITY_COMMON and isQuestItem(itemType, itemClassId, itemName) then
-		itemQuality = QUALITY_QUEST
+	-- Upgrade quest items to special quality (99 = custom quest quality)
+	if itemQuality <= 1 and isQuestItem(itemType, itemClassId, itemName) then
+		itemQuality = 99
 	end
 
-	-- Apply or hide border based on quality
-	if itemQuality >= QUALITY_UNCOMMON then
+	-- Apply or hide border based on quality (2+ = uncommon or better)
+	if itemQuality >= 2 then
 		showBorder(button, itemQuality)
 	else
 		hideBorder(button)
 	end
 end
 
--- Event bus for quest cache changes
-local questChangeListeners = {}
-
+-- Registers callback to be notified when quest objectives change
 cfItemColors.registerQuestChangeListener = function(callback)
 	table.insert(questChangeListeners, callback)
 end
 
+-- Notifies all registered listeners that quest objectives have changed
 cfItemColors.onQuestObjectivesChanged = function()
 	for _, listener in ipairs(questChangeListeners) do
 		listener()

@@ -1,16 +1,12 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.LOOT)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.LOOT)
 if not enabled then return end
 
--- Shared dependencies
-local applyQualityColor = cfItemColors.applyQualityColor
-
--- Updates a single loot slot button with quality color
+-- Updates a single loot slot button
 local function updateLootSlotButton(slotIndex)
 	local lootSlotButton = _G["LootButton" .. slotIndex]
 	local lootItemLink = GetLootSlotLink(slotIndex)
-	applyQualityColor(lootSlotButton, lootItemLink)
+	cfItemColors.applyQualityColor(lootSlotButton, lootItemLink)
 end
 
--- Hook loot button updates
-hooksecurefunc("LootFrame_UpdateButton", updateLootSlotButton)
+hooksecurefunc("LootFrame_UpdateButton", updateLootSlotButton)  -- Loot button updates

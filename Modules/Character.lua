@@ -1,32 +1,26 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.CHARACTER)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.CHARACTER)
 if not enabled then return end
 
--- Shared dependencies
-local EQUIPMENT_SLOTS = cfItemColors.EQUIPMENT_SLOTS
-local applyQualityColor = cfItemColors.applyQualityColor
-
--- Updates a single character equipment slot with quality color
+-- Updates a single character equipment slot
 local function updateSingleEquipmentSlot(slotId)
-	local equipmentSlot = EQUIPMENT_SLOTS[slotId]
+	local equipmentSlot = cfItemColors.EQUIPMENT_SLOTS[slotId]
 	local equipmentButton = _G["Character" .. equipmentSlot .. "Slot"]
 	local inventoryItemLink = GetInventoryItemLink("player", slotId)
-	applyQualityColor(equipmentButton, inventoryItemLink)
+	cfItemColors.applyQualityColor(equipmentButton, inventoryItemLink)
 end
 
--- Updates all equipment slots with quality colors
+-- Updates all character equipment slots
 local function updateAllEquipmentSlots()
-	for i = 1, #EQUIPMENT_SLOTS do
+	for i = 1, #cfItemColors.EQUIPMENT_SLOTS do
 		updateSingleEquipmentSlot(i)
 	end
 end
 
--- Only 2 events needed for complete coverage
+-- Update colors on equipment changes and login
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")  -- Perfect 1:1 ratio, zero spam
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")     -- Login initialization
-
--- Processes equipment changes and login
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")  	-- Equipment slot changed
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  		-- Login initialization
 eventFrame:SetScript("OnEvent", function(_, event, slotId)
 	if event == "PLAYER_EQUIPMENT_CHANGED" then
 		updateSingleEquipmentSlot(slotId)

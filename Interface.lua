@@ -1,20 +1,12 @@
--- Local references to Init API
-local MODULES = cfItemColors.Init.MODULES
-local GetModuleState = cfItemColors.Init.GetModuleState
-local SetModuleEnabled = cfItemColors.Init.SetModuleEnabled
-
 -- Settings panel frame
 local panel = CreateFrame("Frame", "cfItemColorsPanel")
 panel.name = "cfItemColors"
 
--- Pending state (created fresh on panel open)
-local pendingState = nil
+-- Module state
+local pendingState = {}
+local allCheckboxes = {}
 
-local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-title:SetPoint("TOPLEFT", 16, -16)
-title:SetText("cfItemColors Settings")
-
--- Helper function to create a checkbox (conflict detection deferred to initialization)
+-- Creates a checkbox for a module (conflict detection deferred to initialization)
 local function createCheckbox(parent, anchorTo, xOffset, yOffset, moduleName)
 	local check = CreateFrame("CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
 	check:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT", xOffset, yOffset)
@@ -25,21 +17,23 @@ local function createCheckbox(parent, anchorTo, xOffset, yOffset, moduleName)
 	return check
 end
 
--- Store all checkboxes for later initialization
-local allCheckboxes = {}
+-- Title
+local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+title:SetPoint("TOPLEFT", 16, -16)
+title:SetText("cfItemColors Settings")
 
 -- Left column checkboxes
-allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, MODULES.BAGS)
-allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, MODULES.BANK)
-allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, MODULES.CHARACTER)
-allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, MODULES.INSPECT)
-allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, MODULES.LOOT)
+allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, cfItemColors.MODULES.BAGS)
+allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, cfItemColors.MODULES.BANK)
+allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, cfItemColors.MODULES.CHARACTER)
+allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, cfItemColors.MODULES.INSPECT)
+allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, cfItemColors.MODULES.LOOT)
 
 -- Right column checkboxes
-allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, MODULES.MERCHANT)
-allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, MODULES.PROFESSIONS)
-allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, MODULES.QUEST)
-allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, MODULES.QUEST_OBJECTIVE)
+allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, cfItemColors.MODULES.MERCHANT)
+allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, cfItemColors.MODULES.PROFESSIONS)
+allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, cfItemColors.MODULES.QUEST)
+allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, cfItemColors.MODULES.QUEST_OBJECTIVE)
 
 -- Explanatory note for Quest Objectives
 local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -53,8 +47,8 @@ group2Header:SetPoint("TOPLEFT", allCheckboxes.lootCheck, "BOTTOMLEFT", 0, -16)
 group2Header:SetText("|cffFFD700Player Trading:|r")
 
 -- Group 2 checkboxes (Player trading features) - in columns
-allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, MODULES.TRADE)
-allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, MODULES.MAILBOX)
+allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, cfItemColors.MODULES.TRADE)
+allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, cfItemColors.MODULES.MAILBOX)
 
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -64,7 +58,7 @@ reloadBtn:SetText("Reload UI")
 reloadBtn:SetScript("OnClick", function()
 	-- Commit pending changes to database via Init API
 	for moduleName, enabled in pairs(pendingState) do
-		SetModuleEnabled(moduleName, enabled)
+		cfItemColors.SetModuleEnabled(moduleName, enabled)
 	end
 	ReloadUI()
 end)
@@ -79,18 +73,20 @@ local info = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 info:SetPoint("TOPLEFT", reloadBtn, "BOTTOMLEFT", 4, -8)
 info:SetText("Type |cffFFFF00/cfic|r to open this panel")
 
--- Function to initialize checkboxes from database and apply conflict detection
+-- Initializes all checkboxes from database with conflict detection
 local function initializeCheckboxes()
-	-- Initialize pending state from Init API
-	pendingState = {}
-	for _, moduleName in pairs(MODULES) do
-		local enabled, conflict = GetModuleState(moduleName)
+	-- Clear and repopulate pending state from Init API
+	for k in pairs(pendingState) do
+		pendingState[k] = nil
+	end
+	for _, moduleName in pairs(cfItemColors.MODULES) do
+		local enabled, conflict = cfItemColors.GetModuleState(moduleName)
 		pendingState[moduleName] = enabled
 	end
 
 	-- Configure each checkbox with conflict detection
 	for _, check in pairs(allCheckboxes) do
-		local enabled, conflict = GetModuleState(check.moduleName)
+		local enabled, conflict = cfItemColors.GetModuleState(check.moduleName)
 
 		if conflict then
 			-- Conflict detected - uncheck and disable checkbox, add warning
@@ -126,14 +122,10 @@ local function initializeCheckboxes()
 	end
 end
 
--- Don't initialize immediately - wait for all addons to load
--- This ensures Init.lua has processed conflicts before we display checkboxes
+-- Initialize interface checkboxes when all addons loaded
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", initializeCheckboxes)
-
--- OnShow: Refresh checkboxes from database
-panel:SetScript("OnShow", initializeCheckboxes)
 
 -- Register with settings API (for modern WoW versions)
 if Settings and Settings.RegisterCanvasLayoutCategory then

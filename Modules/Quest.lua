@@ -1,10 +1,8 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.QUEST)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.QUEST)
 if not enabled then return end
 
--- Shared dependencies
-local applyQualityColor = cfItemColors.applyQualityColor
-
+-- Updates quest reward buttons (choices and guaranteed rewards)
 local function updateQuestRewards(buttonPrefix)
 	local isQuestLog = QuestLogFrame and QuestLogFrame:IsVisible()
 
@@ -22,29 +20,30 @@ local function updateQuestRewards(buttonPrefix)
 		else
 			itemLink = getItemLink("reward", i - numChoices)
 		end
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 end
 
--- Update quest required items
+-- Updates quest required item buttons
 local function updateQuestRequiredItems()
 	local numItems = GetNumQuestItems()
 	for i = 1, numItems do
 		local button = _G["QuestProgressItem" .. i]
 		local itemLink = GetQuestItemLink("required", i)
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 end
 
--- Triggers when viewing quest details at NPC
-hooksecurefunc("QuestInfo_Display", function()
+-- Updates quest detail rewards at NPC
+local function updateQuestInfoRewards()
 	updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem")
-end)
+end
 
--- Triggers when quest log refreshes
-hooksecurefunc("QuestLog_Update", function()
+-- Updates quest log rewards
+local function updateQuestLogRewards()
 	updateQuestRewards("QuestLogItem")
-end)
+end
 
--- Triggers when quest progress dialog shows required items
-hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)
+hooksecurefunc("QuestInfo_Display", updateQuestInfoRewards)  				-- Quest details shown at NPC
+hooksecurefunc("QuestLog_Update", updateQuestLogRewards)  					-- Quest log refreshed
+hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)  -- Quest progress items shown

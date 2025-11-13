@@ -1,15 +1,13 @@
 -- Module enable check
-local enabled = cfItemColors.Init.GetModuleState(cfItemColors.Init.MODULES.MAILBOX)
+local enabled = cfItemColors.GetModuleState(cfItemColors.MODULES.MAILBOX)
 if not enabled then return end
 
-local applyQualityColor = cfItemColors.applyQualityColor
-
--- WoW API constants
+-- WoW constants
 local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
 local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12
 local ATTACHMENTS_MAX_RECEIVE = ATTACHMENTS_MAX_RECEIVE -- 16
 
--- Update inbox mail item colors based on highest quality attachment
+-- Updates inbox mail buttons based on highest quality attachment
 local function updateInboxItems()
 	local numItems = GetInboxNumItems()
 	local pageOffset = ((InboxFrame and InboxFrame.pageNum or 1) - 1) * INBOXITEMS_TO_DISPLAY
@@ -31,20 +29,20 @@ local function updateInboxItems()
 			end
 		end
 
-		applyQualityColor(button, bestItemLink)
+		cfItemColors.applyQualityColor(button, bestItemLink)
 	end
 end
 
--- Update send mail attachment colors
+-- Updates send mail attachment buttons
 local function updateSendMailItems()
 	for i = 1, ATTACHMENTS_MAX_SEND do
 		local button = _G["SendMailAttachment" .. i]
 		local itemLink = GetSendMailItemLink(i)
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 end
 
--- Update open mail attachment colors
+-- Updates open mail attachment buttons
 local function updateOpenMailItems()
 	local mailId = InboxFrame and InboxFrame.openMailID
 	if not mailId then return end
@@ -52,15 +50,15 @@ local function updateOpenMailItems()
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
 		local button = _G["OpenMailAttachmentButton" .. i]
 		local itemLink = GetInboxItemLink(mailId, i)
-		applyQualityColor(button, itemLink)
+		cfItemColors.applyQualityColor(button, itemLink)
 	end
 end
 
--- Register mailbox events
+-- Update colors on mailbox changes - inbox, send form, and sent mail
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
-eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
-eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")
+eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")  		-- Inbox changes
+eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")  	-- Send form updated
+eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")  		-- Mail sent successfully
 
 eventFrame:SetScript("OnEvent", function(_, event)
 	if event == "MAIL_INBOX_UPDATE" then
@@ -70,5 +68,4 @@ eventFrame:SetScript("OnEvent", function(_, event)
 	end
 end)
 
--- Update opened mail attachments
-hooksecurefunc("OpenMail_Update", updateOpenMailItems)
+hooksecurefunc("OpenMail_Update", updateOpenMailItems)  -- Opened mail updates
