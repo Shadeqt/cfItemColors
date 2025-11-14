@@ -126,10 +126,9 @@ local function initializeCheckboxes()
 	end
 end
 
--- Initialize interface checkboxes when all addons loaded
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", initializeCheckboxes)
+-- Initialize interface checkboxes after init completes
+-- (Must wait for self-found detection to complete before reading DB)
+addon:registerInitListener(initializeCheckboxes)
 
 -- Register with settings API (for modern WoW versions)
 if Settings and Settings.RegisterCanvasLayoutCategory then

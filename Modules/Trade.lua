@@ -1,9 +1,6 @@
 local db = cfItemColorsDB
 local addon = cfItemColors
 
--- Module enable check
-if not db[addon.MODULES.TRADE].enabled then return end
-
 -- WoW constants
 local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player
 
@@ -29,17 +26,26 @@ local function updateAllTradeSlots()
 	end
 end
 
--- Update trade slot colors on window open and item changes
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("TRADE_SHOW")  				-- Trade window opened
-eventFrame:RegisterEvent("TRADE_PLAYER_ITEM_CHANGED")  	-- Player item changed
-eventFrame:RegisterEvent("TRADE_TARGET_ITEM_CHANGED")  	-- Target item changed
-eventFrame:SetScript("OnEvent", function(_, event, slotIndex)
-	if event == "TRADE_SHOW" then
-		updateAllTradeSlots()
-	elseif event == "TRADE_PLAYER_ITEM_CHANGED" then
-		updatePlayerTradeSlot(slotIndex)
-	elseif event == "TRADE_TARGET_ITEM_CHANGED" then
-		updateTargetTradeSlot(slotIndex)
-	end
-end)
+-- Deferred initialization function (called after init completes)
+local function initializeTradeModule()
+	-- Module enable check
+	if not db[addon.MODULES.TRADE].enabled then return end
+
+	-- Update trade slot colors on window open and item changes
+	local eventFrame = CreateFrame("Frame")
+	eventFrame:RegisterEvent("TRADE_SHOW")  				-- Trade window opened
+	eventFrame:RegisterEvent("TRADE_PLAYER_ITEM_CHANGED")  	-- Player item changed
+	eventFrame:RegisterEvent("TRADE_TARGET_ITEM_CHANGED")  	-- Target item changed
+	eventFrame:SetScript("OnEvent", function(_, event, slotIndex)
+		if event == "TRADE_SHOW" then
+			updateAllTradeSlots()
+		elseif event == "TRADE_PLAYER_ITEM_CHANGED" then
+			updatePlayerTradeSlot(slotIndex)
+		elseif event == "TRADE_TARGET_ITEM_CHANGED" then
+			updateTargetTradeSlot(slotIndex)
+		end
+	end)
+end
+
+-- Register to wait for init completion
+addon:registerInitListener(initializeTradeModule)

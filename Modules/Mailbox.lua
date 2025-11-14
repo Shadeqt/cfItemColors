@@ -1,9 +1,6 @@
 local db = cfItemColorsDB
 local addon = cfItemColors
 
--- Module enable check
-if not db[addon.MODULES.MAILBOX].enabled then return end
-
 -- WoW constants
 local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
 local ATTACHMENTS_MAX_SEND = ATTACHMENTS_MAX_SEND -- 12
@@ -56,18 +53,27 @@ local function updateOpenMailItems()
 	end
 end
 
--- Update colors on mailbox changes - inbox, send form, and sent mail
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")  		-- Inbox changes
-eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")  	-- Send form updated
-eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")  		-- Mail sent successfully
+-- Deferred initialization function (called after init completes)
+local function initializeMailboxModule()
+	-- Module enable check
+	if not db[addon.MODULES.MAILBOX].enabled then return end
 
-eventFrame:SetScript("OnEvent", function(_, event)
-	if event == "MAIL_INBOX_UPDATE" then
-		updateInboxItems()
-	elseif event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
-		updateSendMailItems()
-	end
-end)
+	-- Update colors on mailbox changes - inbox, send form, and sent mail
+	local eventFrame = CreateFrame("Frame")
+	eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")  		-- Inbox changes
+	eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")  	-- Send form updated
+	eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")  		-- Mail sent successfully
 
-hooksecurefunc("OpenMail_Update", updateOpenMailItems)  -- Opened mail updates
+	eventFrame:SetScript("OnEvent", function(_, event)
+		if event == "MAIL_INBOX_UPDATE" then
+			updateInboxItems()
+		elseif event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
+			updateSendMailItems()
+		end
+	end)
+
+	hooksecurefunc("OpenMail_Update", updateOpenMailItems)  -- Opened mail updates
+end
+
+-- Register to wait for init completion
+addon:registerInitListener(initializeMailboxModule)

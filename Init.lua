@@ -20,6 +20,9 @@ addon.MODULES = {
 	TRADE = "Trade",
 }
 
+-- Callback system for modules waiting on init completion
+addon.initListeners = {}
+
 -- WoW constants
 local BUFF_MAX_DISPLAY = BUFF_MAX_DISPLAY -- 32, max buffs on player
 
@@ -45,19 +48,31 @@ if not db then
 	end
 end
 
--- Self-found detection (deferred, requires buffs to be loaded)
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-initFrame:SetScript("OnEvent", function(self, event)
-	-- Wait 1 second for buffs to load, then check
-	C_Timer.After(1, function()
-		-- Unregister event (only need to check once)
-		self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+function addon:registerInitListener(callback)
+	table.insert(self.initListeners, callback)
+end
 
-		-- Self-found: disable trade/mailbox by default
-		if isPlayerSelfFound() then
-			db[addon.MODULES.TRADE].enabled = false
-			db[addon.MODULES.MAILBOX].enabled = false
-		end
-	end)
+function addon:onInitComplete()
+	for _, listener in ipairs(self.initListeners) do
+		listener()
+	end
+end
+
+-- Self-found detection on addon load
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("ADDON_LOADED")
+initFrame:SetScript("OnEvent", function(self, event, addonName)
+	if addonName ~= "cfItemColors" then return end
+
+	-- Unregister event (only need to check once)
+	self:UnregisterEvent("ADDON_LOADED")
+
+	-- Check for self-found status and disable modules if needed
+	if isPlayerSelfFound() then
+		db[addon.MODULES.TRADE].enabled = false
+		db[addon.MODULES.MAILBOX].enabled = false
+	end
+
+	-- Trigger module initialization callbacks
+	addon:onInitComplete()
 end)
