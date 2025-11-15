@@ -36,15 +36,32 @@ local function isPlayerSelfFound()
 	return false
 end
 
+-- Database defaults
+local dbDefaults = {}
+for _, moduleName in pairs(addon.MODULES) do
+	dbDefaults[moduleName] = {
+		enabled = true,
+		conflict = nil
+	}
+end
+
 -- Initialize database immediately at file load
 if not db then
 	db = {}
 	cfItemColorsDB = db
-	for _, moduleName in pairs(addon.MODULES) do
-		db[moduleName] = {
-			enabled = true,
-			conflict = nil
-		}
+end
+
+-- Apply defaults for any missing keys
+for key, value in pairs(dbDefaults) do
+	if db[key] == nil then
+		db[key] = value
+	end
+end
+
+-- Remove keys from DB that aren't in defaults
+for key in pairs(db) do
+	if dbDefaults[key] == nil then
+		db[key] = nil
 	end
 end
 
