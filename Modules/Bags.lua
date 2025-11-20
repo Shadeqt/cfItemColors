@@ -22,7 +22,7 @@ local function updateSingleBagColors(bagId)
 		if bagItemButton then
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
-			addon.applyQualityColor(bagItemButton, containerItemId)
+			addon.applyQualityColor(bagItemButton, containerItemId, bagId, bagItemButtonId)
 		end
 	end
 end

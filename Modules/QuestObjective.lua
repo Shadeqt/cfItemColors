@@ -73,18 +73,20 @@ end
 
 -- Adds items from newly accepted quest to cache
 local function onQuestAccepted(questLogIndex)
-	local items, questID = extractQuestItems(questLogIndex)
-	for itemName in pairs(items) do
-		addon.questObjectiveCache[itemName] = questID
-	end
-
-	for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
-		if questID == misclassifiedQuestID then
+	C_Timer.After(0.2, function()
+		local items, questID = extractQuestItems(questLogIndex)
+		for itemName in pairs(items) do
 			addon.questObjectiveCache[itemName] = questID
 		end
-	end
 
-	invalidateQuestCache()
+		for itemName, misclassifiedQuestID in pairs(MISCLASSIFIED_QUEST_ITEMS) do
+			if questID == misclassifiedQuestID then
+				addon.questObjectiveCache[itemName] = questID
+			end
+		end
+
+		invalidateQuestCache()
+	end)
 end
 
 -- Removes items from abandoned or completed quest from cache
