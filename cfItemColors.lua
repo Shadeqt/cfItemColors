@@ -7,27 +7,18 @@ addon.EQUIPMENT_SLOTS = {
 }
 
 addon.questObjectiveCache = {}
-addon.questCacheVersion = 0
 
 -- Event bus for quest cache changes
 local questChangeListeners = {}
 
+-- Quality constants
+local QUALITY_COMMON = 1
+local QUALITY_UNCOMMON = 2
+local QUEST_QUALITY = 99 -- Custom quest item quality
+
 -- Blizzard's global table containing RGB color values for each item quality tier
 local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
-QUALITY_COLORS[99] = {r = 1.0, g = 0.82, b = 0.0} -- Custom gold color for quest items
-
--- Determines if an item is quest-related based on type, class, or cache
-local function isQuestItem(itemType, itemClassId, itemName)
-	if itemType == "Quest" or itemClassId == 12 then
-		return true
-	end
-
-	if addon.questObjectiveCache[itemName] then
-		return true
-	end
-
-	return false
-end
+QUALITY_COLORS[QUEST_QUALITY] = {r = 1.0, g = 0.82, b = 0.0} -- Custom gold color for quest items
 
 -- Creates or returns existing colored border texture overlay for an item button
 local function createBorder(button)
@@ -50,44 +41,29 @@ local function createBorder(button)
 	return border
 end
 
--- Shows colored border on item button, using native IconBorder if available
-local function showBorder(button, itemQuality)
-	-- Try native IconBorder first
-	-- if button.IconBorder then
-	-- 	local color = QUALITY_COLORS[itemQuality]
-	-- 	button.IconBorder:SetVertexColor(color.r, color.g, color.b, 1)
-	-- 	button.IconBorder:Show()
-	-- 	return
-	-- end
-
-	-- Fallback to custom border
-	local customBorder = createBorder(button)
-	local color = QUALITY_COLORS[itemQuality]
-	customBorder:SetVertexColor(color.r, color.g, color.b, 0.6)
-	customBorder:Show()
+-- Updates border visibility and color based on item quality
+local function updateBorder(button, itemQuality)
+	if itemQuality and itemQuality >= QUALITY_UNCOMMON then
+		local border = createBorder(button)
+		local color = QUALITY_COLORS[itemQuality]
+		border:SetVertexColor(color.r, color.g, color.b, 0.6)
+		border:Show()
+	elseif button.customBorder then
+		button.customBorder:Hide()
+	end
 end
 
--- Hides border and clears quality state from button
-local function hideBorder(button)
-	-- Hide native IconBorder if it exists
-	if button.IconBorder then
-		button.IconBorder:Hide()
-	end
-
-	-- Hide custom border if it exists
-	if button.customBorder then
-		button.customBorder:Hide()
+-- Hides quest marker on button
+local function hideQuestMarker(button)
+	if button.questMarker then
+		button.questMarker:Hide()
 	end
 end
 
 -- Applies quest marker overlay to container item buttons
 local function applyQuestMarker(button, bagId, bagItemButtonId)
-	if button.beginsQuest == false then return end
-
-	if not bagId or not bagItemButtonId then
-		if button.questMarker then
-			button.questMarker:Hide()
-		end
+	if button.beginsQuest == false or not bagId or not bagItemButtonId then
+		hideQuestMarker(button)
 		return
 	end
 
@@ -95,9 +71,7 @@ local function applyQuestMarker(button, bagId, bagItemButtonId)
 
 	if not questInfo or not questInfo.questID then
 		button.beginsQuest = false
-		if button.questMarker then
-			button.questMarker:Hide()
-		end
+		hideQuestMarker(button)
 		return
 	end
 
@@ -105,15 +79,10 @@ local function applyQuestMarker(button, bagId, bagItemButtonId)
 		button.questMarker = button:CreateTexture(nil, "OVERLAY")
 		button.questMarker:SetSize(16, 16)
 		button.questMarker:SetPoint("BOTTOMRIGHT", -2, 4)
-		button.questMarker:Hide()
 	end
 
-	if questInfo.isActive then
-		button.questMarker:SetTexture("Interface\\GossipFrame\\ActiveQuestIcon")
-	else
-		button.questMarker:SetTexture("Interface\\GossipFrame\\AvailableQuestIcon")
-	end
-
+	local texture = questInfo.isActive and "Interface\\GossipFrame\\ActiveQuestIcon" or "Interface\\GossipFrame\\AvailableQuestIcon"
+	button.questMarker:SetTexture(texture)
 	button.beginsQuest = true
 	button.questMarker:Show()
 end
@@ -121,49 +90,23 @@ end
 -- Applies quality-based border color to button or hides border for common items
 function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	if not itemIdOrLink then
-		hideBorder(button)
-		button.itemIdOrLink = nil
-		if button.questMarker then
-			button.questMarker:Hide()
-		end
-		return
-	end
-
-	if button.itemIdOrLink == itemIdOrLink and button.questCacheVersion == addon.questCacheVersion then
-		-- Item hasn't changed, but border may have been hidden when bag was closed
-		-- Re-show the border if quality is high enough (use cachedQuality since itemQuality may be nil)
-		if button.cachedQuality and button.cachedQuality >= 2 then
-			showBorder(button, button.cachedQuality)
-		end
+		updateBorder(button, nil)
+		applyQuestMarker(button, nil, nil)
 		return
 	end
 
 	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
-	button.itemIdOrLink = itemIdOrLink
-	button.questCacheVersion = addon.questCacheVersion
+	-- Upgrade quest items to special quality
+	local isQuestRelated = itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName]
+	if itemQuality <= QUALITY_COMMON and isQuestRelated then
+		itemQuality = QUEST_QUALITY
+	end
+
 	button.beginsQuest = nil
-
-	-- Upgrade quest items to special quality (99 = custom quest quality)
-	if itemQuality <= 1 and isQuestItem(itemType, itemClassId, itemName) then
-		itemQuality = 99
-	end
-
-	-- Cache the quality separately since button.itemQuality may be reset by WoW's UI
-	button.cachedQuality = itemQuality
-
-	-- Apply or hide border based on quality (2+ = uncommon or better)
-	if itemQuality >= 2 then
-		showBorder(button, itemQuality)
-	else
-		hideBorder(button)
-	end
-
-	-- Apply quest marker if bag context is provided
-	if bagId and bagItemButtonId then
-		applyQuestMarker(button, bagId, bagItemButtonId)
-	end
+	updateBorder(button, itemQuality)
+	applyQuestMarker(button, bagId, bagItemButtonId)
 end
 
 -- Registers callback to be notified when quest objectives change

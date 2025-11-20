@@ -30,14 +30,8 @@ local function extractQuestItems(questLogIndex)
 	return items
 end
 
--- Increments cache version and notifies listeners
-local function invalidateQuestCache()
-	addon.questCacheVersion = addon.questCacheVersion + 1
-	addon.onQuestObjectivesChanged()
-end
-
--- Builds complete quest item cache from all active quests
-local function createQuestCache()
+-- Rebuilds complete quest item cache from all active quests
+local function rebuildQuestCache()
 	-- Start with empty cache
 	addon.questObjectiveCache = {}
 
@@ -66,7 +60,7 @@ local function createQuestCache()
 	end
 	print(string.format("|cff00ff00[QuestObjective]|r %d items cached", count))
 
-	invalidateQuestCache()
+	addon.onQuestObjectivesChanged()
 end
 
 -- Build and maintain quest objective cache from quest log
@@ -76,11 +70,11 @@ eventFrame:RegisterEvent("QUEST_REMOVED")  			-- Quest abandoned or completed
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  	-- Initial cache build
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	if event == "QUEST_ACCEPTED" then
-		createQuestCache()
+		rebuildQuestCache()
 	elseif event == "QUEST_REMOVED" then
-		createQuestCache()
+		rebuildQuestCache()
 	elseif event == "PLAYER_ENTERING_WORLD" then
-		C_Timer.After(0.5, createQuestCache)
+		C_Timer.After(0.5, rebuildQuestCache)
 		eventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	end
 end)
