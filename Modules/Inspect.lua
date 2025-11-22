@@ -4,12 +4,32 @@ local addon = cfItemColors
 -- Module enable check
 if not db[addon.MODULES.INSPECT].enabled then return end
 
+-- Clears retry counters and borders for all inspect slots
+local function clearAllInspectSlots()
+	for i = 1, #addon.EQUIPMENT_SLOTS do
+		local equipmentSlot = addon.EQUIPMENT_SLOTS[i]
+		local inspectButton = _G["Inspect" .. equipmentSlot .. "Slot"]
+		if inspectButton then
+			inspectButton.cfRetryCount = nil
+			addon.applyQualityColor(inspectButton, nil)
+		end
+	end
+end
+
 -- Updates a single inspect equipment slot
 local function updateSingleInspectSlot(slotId)
 	local equipmentSlot = addon.EQUIPMENT_SLOTS[slotId]
 	local inspectButton = _G["Inspect" .. equipmentSlot .. "Slot"]
-	local inventoryItemLink = GetInventoryItemLink("target", slotId)
-	addon.applyQualityColor(inspectButton, inventoryItemLink)
+
+	addon.retryWithDelay(
+		inspectButton,
+		function()
+			return GetInventoryItemLink("target", slotId)
+		end,
+		function(inventoryItemLink)
+			addon.applyQualityColor(inspectButton, inventoryItemLink)
+		end
+	)
 end
 
 -- Updates all inspect equipment slots
@@ -19,10 +39,10 @@ local function updateAllInspectSlots()
 	end
 end
 
--- Handles inspect ready event with delay for data loading
+-- Handles inspect ready event
 local function onInspectEvent(_, event)
 	if event == "INSPECT_READY" then
-		C_Timer.After(0.1, updateAllInspectSlots)
+		updateAllInspectSlots()
 	end
 end
 
@@ -34,5 +54,8 @@ eventFrame:SetScript("OnEvent", function(self, _, addonName)
 		eventFrame:RegisterEvent("INSPECT_READY")  -- Inspect data ready
 		eventFrame:SetScript("OnEvent", onInspectEvent)
 		self:UnregisterEvent("ADDON_LOADED")
+
+		-- Hook inspect window close to clear retry counters and borders
+		InspectFrame:HookScript("OnHide", clearAllInspectSlots)
 	end
 end)

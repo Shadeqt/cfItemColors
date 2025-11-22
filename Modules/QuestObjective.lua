@@ -53,13 +53,6 @@ local function rebuildQuestCache()
 		end
 	end
 
-	-- Count and print summary
-	local count = 0
-	for _ in pairs(addon.questObjectiveCache) do
-		count = count + 1
-	end
-	print(string.format("|cff00ff00[QuestObjective]|r %d items cached", count))
-
 	addon.onQuestObjectivesChanged()
 end
 

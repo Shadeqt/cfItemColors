@@ -11,6 +11,35 @@ addon.questObjectiveCache = {}
 -- Event bus for quest cache changes
 local questChangeListeners = {}
 
+-- Shared retry logic utility with standardized timing
+function addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
+	local result = testFunc()
+
+	if result then
+		-- Test passed - clear retry counter and execute success callback
+		button.cfRetryCount = nil
+		successFunc(result)
+		return
+	end
+
+	-- Test failed - retry with escalating delays
+	local retryCount = button.cfRetryCount or 0
+	if retryCount < 3 then
+		button.cfRetryCount = retryCount + 1
+		local delays = {0, 0.1, 0.25}
+		local delay = delays[retryCount + 1] or 0.25
+		C_Timer.After(delay, function()
+			addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
+		end)
+	else
+		-- Max retries reached - clear counter and execute failure callback
+		button.cfRetryCount = nil
+		if failureFunc then
+			failureFunc()
+		end
+	end
+end
+
 -- Quality constants
 local QUALITY_COMMON = 1
 local QUALITY_UNCOMMON = 2
