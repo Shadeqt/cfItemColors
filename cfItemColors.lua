@@ -12,8 +12,8 @@ addon.questObjectiveCache = {}
 local questChangeListeners = {}
 
 -- Shared retry logic utility with standardized timing
-function addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
-	local result = testFunc()
+function addon.retryWithDelay(button, tryFunc, successFunc, failureFunc)
+	local result = tryFunc()
 
 	if result then
 		-- Test passed - clear retry counter and execute success callback
@@ -29,7 +29,7 @@ function addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
 		local delays = {0.01, 0.1, 0.15}
 		local delay = delays[retryCount + 1] or 0.15
 		C_Timer.After(delay, function()
-			addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
+			addon.retryWithDelay(button, tryFunc, successFunc, failureFunc)
 		end)
 	else
 		-- Max retries reached - clear counter and execute failure callback
