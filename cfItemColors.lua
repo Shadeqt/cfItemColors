@@ -26,8 +26,8 @@ function addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
 	local retryCount = button.cfRetryCount or 0
 	if retryCount < 3 then
 		button.cfRetryCount = retryCount + 1
-		local delays = {0, 0.1, 0.25}
-		local delay = delays[retryCount + 1] or 0.25
+		local delays = {0.01, 0.1, 0.15}
+		local delay = delays[retryCount + 1] or 0.15
 		C_Timer.After(delay, function()
 			addon.retryWithDelay(button, testFunc, successFunc, failureFunc)
 		end)
