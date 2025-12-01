@@ -133,6 +133,7 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 		or (itemType == "Quest")
 		or (containerInfo and containerInfo.questID)
 		or (containerInfo and containerInfo.isQuestItem)
+		or addon.questObjectiveCache[itemName]
 
 	if itemQuality <= QUALITY_COMMON and isQuestItem then
 		itemQuality = QUEST_QUALITY
