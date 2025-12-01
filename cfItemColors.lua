@@ -127,9 +127,14 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
 	if not itemQuality then return end
 
-	-- Upgrade quest items to special quality
-	local isQuestRelated = itemType == "Quest" or itemClassId == 12 or addon.questObjectiveCache[itemName]
-	if itemQuality <= QUALITY_COMMON and isQuestRelated then
+	-- Upgrade quest items to special quality (check both GetItemInfo and GetContainerItemQuestInfo)
+	local containerInfo = bagId and bagItemButtonId and C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
+	local isQuestItem = (itemClassId == 12)
+		or (itemType == "Quest")
+		or (containerInfo and containerInfo.questID)
+		or (containerInfo and containerInfo.isQuestItem)
+
+	if itemQuality <= QUALITY_COMMON and isQuestItem then
 		itemQuality = QUEST_QUALITY
 	end
 

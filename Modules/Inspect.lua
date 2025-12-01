@@ -24,7 +24,7 @@ local function updateSingleInspectSlot(slotId)
 	addon.retryWithDelay(
 		inspectButton,
 		function()
-			return GetInventoryItemLink("target", slotId)
+			return GetInventoryItemLink(InspectFrame.unit, slotId)
 		end,
 		function(inventoryItemLink)
 			addon.applyQualityColor(inspectButton, inventoryItemLink)
