@@ -20,44 +20,68 @@ local function createCheckbox(parent, anchorTo, xOffset, yOffset, moduleName)
 	return check
 end
 
+-- Helper function to create a separator line
+local function createSeparator(parent, anchorTo, width, yOffset)
+	local separator = parent:CreateTexture(nil, "ARTWORK")
+	separator:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT", 0, yOffset)
+	separator:SetSize(width, 1)
+	separator:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+	return separator
+end
+
+-- Check if pending state differs from saved database
+local function hasUnsavedChanges()
+	for moduleName, pending in pairs(pendingState) do
+		if pending ~= db[moduleName].enabled then
+			return true
+		end
+	end
+	return false
+end
+
 -- Title
 local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("cfItemColors Settings")
 
+local titleSeparator = createSeparator(panel, title, 500, -8)
+
 -- Left column checkboxes
-allCheckboxes.bagsCheck = createCheckbox(panel, title, 0, -16, addon.MODULES.BAGS)
+allCheckboxes.bagsCheck = createCheckbox(panel, titleSeparator, 0, -8, addon.MODULES.BAGS)
 allCheckboxes.bankCheck = createCheckbox(panel, allCheckboxes.bagsCheck, 0, -8, addon.MODULES.BANK)
 allCheckboxes.characterCheck = createCheckbox(panel, allCheckboxes.bankCheck, 0, -8, addon.MODULES.CHARACTER)
 allCheckboxes.inspectCheck = createCheckbox(panel, allCheckboxes.characterCheck, 0, -8, addon.MODULES.INSPECT)
 allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -8, addon.MODULES.LOOT)
 
 -- Right column checkboxes
-allCheckboxes.merchantCheck = createCheckbox(panel, title, 250, -16, addon.MODULES.MERCHANT)
+allCheckboxes.merchantCheck = createCheckbox(panel, titleSeparator, 250, -8, addon.MODULES.MERCHANT)
 allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, addon.MODULES.PROFESSIONS)
 allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, addon.MODULES.QUEST)
 allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, addon.MODULES.QUEST_OBJECTIVE)
 
 -- Explanatory note for Quest Objectives
 local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-questObjNote:SetPoint("TOPLEFT", allCheckboxes.questObjectiveCheck, "BOTTOMLEFT", 20, -2)
-questObjNote:SetTextColor(0.7, 0.7, 0.7)
-questObjNote:SetText("Detects common items (materials, reagents, etc.) needed for active quests")
+questObjNote:SetPoint("TOPLEFT", allCheckboxes.questObjectiveCheck, "BOTTOMLEFT", 4, 0)
+questObjNote:SetText("|cffffffffDetects common items (materials, reagents, etc.) needed for active quests|r")
+
+local section1Separator = createSeparator(panel, allCheckboxes.lootCheck, 500, -8)
 
 -- Group 2 Header: Player Trading
 local group2Header = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-group2Header:SetPoint("TOPLEFT", allCheckboxes.lootCheck, "BOTTOMLEFT", 0, -16)
-group2Header:SetText("|cffFFD700Player Trading:|r")
+group2Header:SetPoint("TOPLEFT", section1Separator, "BOTTOMLEFT", 0, -8)
+group2Header:SetText("Player Trading:")
 
 -- Group 2 checkboxes (Player trading features) - in columns
 allCheckboxes.tradeCheck = createCheckbox(panel, group2Header, 0, -8, addon.MODULES.TRADE)
 allCheckboxes.mailboxCheck = createCheckbox(panel, group2Header, 250, -8, addon.MODULES.MAILBOX)
 
+local section2Separator = createSeparator(panel, allCheckboxes.tradeCheck, 500, -8)
+
 -- Reload UI button
 local reloadBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-reloadBtn:SetPoint("TOPLEFT", allCheckboxes.tradeCheck, "BOTTOMLEFT", 0, -16)
+reloadBtn:SetPoint("TOPLEFT", section2Separator, "BOTTOMLEFT", 0, -8)
 reloadBtn:SetSize(120, 25)
-reloadBtn:SetText("Reload UI")
+reloadBtn:SetText("Save Changes")
 reloadBtn:SetScript("OnClick", function()
 	-- Commit pending changes to database
 	for moduleName, enabled in pairs(pendingState) do
@@ -69,15 +93,18 @@ end)
 -- Warning text
 local warning = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 warning:SetPoint("LEFT", reloadBtn, "RIGHT", 8, 0)
-warning:SetText("|cffFF6600Click 'Reload UI' to apply changes|r")
+warning:SetText("Click '|cffffd100Save Changes|r' to apply")
 
 -- Info text
 local info = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 info:SetPoint("TOPLEFT", reloadBtn, "BOTTOMLEFT", 4, -8)
-info:SetText("Type |cffFFFF00/cfic|r to open this panel")
+info:SetText("Type |cffffffff/cfic|r to open this panel")
 
 -- Initializes all checkboxes from database with conflict detection
 local function initializeCheckboxes()
+	-- Hide warning initially (no unsaved changes)
+	warning:Hide()
+
 	-- Clear and repopulate pending state from database
 	for k in pairs(pendingState) do
 		pendingState[k] = nil
@@ -96,8 +123,6 @@ local function initializeCheckboxes()
 			-- Conflict detected - uncheck and disable checkbox, add warning
 			check:SetChecked(false)
 			check:Disable()
-
-			-- Gray out the label text
 			check.Text:SetTextColor(0.5, 0.5, 0.5)
 
 			-- Create warning text if not already created
@@ -105,17 +130,15 @@ local function initializeCheckboxes()
 				check.warningText = check:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 				check.warningText:SetPoint("LEFT", check.Text, "RIGHT", 4, 0)
 			end
-			check.warningText:SetText("|cffFF7F00(" .. conflict .. ")|r")
+			check.warningText:SetText("(" .. conflict .. ")")
 		else
 			-- No conflict - set checked state from DB and enable checkbox
 			check:SetChecked(enabled)
 			check:Enable()
 
-			-- Restore normal label text color
-			check.Text:SetTextColor(1.0, 1.0, 1.0)
-
 			check:SetScript("OnClick", function(self)
 				pendingState[self.moduleName] = self:GetChecked()
+				if hasUnsavedChanges() then warning:Show() else warning:Hide() end
 			end)
 
 			-- Hide warning text if it exists
