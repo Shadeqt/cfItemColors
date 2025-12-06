@@ -46,16 +46,24 @@ local function onInspectEvent(_, event)
 	end
 end
 
--- Initialize inspect UI when addon loads and handle inspect events
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")  -- Wait for Blizzard_InspectUI
-eventFrame:SetScript("OnEvent", function(self, _, addonName)
-	if addonName == "Blizzard_InspectUI" then
-		eventFrame:RegisterEvent("INSPECT_READY")  -- Inspect data ready
-		eventFrame:SetScript("OnEvent", onInspectEvent)
-		self:UnregisterEvent("ADDON_LOADED")
 
-		-- Hook inspect window close to clear retry counters and borders
-		InspectFrame:HookScript("OnHide", clearAllInspectSlots)
-	end
-end)
+-- Initialize inspect UI hooks
+local function initInspectHooks()
+	eventFrame:RegisterEvent("INSPECT_READY")
+	eventFrame:SetScript("OnEvent", onInspectEvent)
+	InspectFrame:HookScript("OnHide", clearAllInspectSlots)
+end
+
+-- Check if Blizzard_InspectUI is already loaded
+if C_AddOns.IsAddOnLoaded("Blizzard_InspectUI") then
+	initInspectHooks()
+else
+	eventFrame:RegisterEvent("ADDON_LOADED")
+	eventFrame:SetScript("OnEvent", function(self, _, addonName)
+		if addonName == "Blizzard_InspectUI" then
+			self:UnregisterEvent("ADDON_LOADED")
+			initInspectHooks()
+		end
+	end)
+end

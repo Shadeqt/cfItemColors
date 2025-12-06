@@ -97,8 +97,10 @@ local function applyQuestMarker(button, bagId, bagItemButtonId)
 	end
 
 	local questInfo = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
+	local questId = questInfo and questInfo.questID
+	local isCompleted = questId and C_QuestLog.IsQuestFlaggedCompleted(questId)
 
-	if not questInfo or not questInfo.questID then
+	if not questId or isCompleted then
 		button.beginsQuest = false
 		hideQuestMarker(button)
 		return
