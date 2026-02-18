@@ -6,48 +6,39 @@ addon.EQUIPMENT_SLOTS = {
 	"Finger0", "Finger1", "Trinket0", "Trinket1", "Back", "MainHand", "SecondaryHand", "Ranged", "Tabard"
 }
 
-addon.questObjectiveCache = {}
-
--- Event bus for quest cache changes
-local questChangeListeners = {}
-
--- Shared retry logic utility with standardized timing
-function addon.retryWithDelay(button, tryFunc, successFunc, failureFunc)
-	local result = tryFunc()
-
-	if result then
-		-- Test passed - clear retry counter and execute success callback
-		button.cfRetryCount = nil
-		successFunc(result)
-		return
-	end
-
-	-- Test failed - retry with escalating delays
-	local retryCount = button.cfRetryCount or 0
-	if retryCount < 3 then
-		button.cfRetryCount = retryCount + 1
-		local delays = {0.01, 0.1, 0.15}
-		local delay = delays[retryCount + 1] or 0.15
-		C_Timer.After(delay, function()
-			addon.retryWithDelay(button, tryFunc, successFunc, failureFunc)
-		end)
-	else
-		-- Max retries reached - clear counter and execute failure callback
-		button.cfRetryCount = nil
-		if failureFunc then
-			failureFunc()
-		end
-	end
-end
-
 -- Quality constants
 local QUALITY_COMMON = 1
 local QUALITY_UNCOMMON = 2
 local QUEST_QUALITY = 99 -- Custom quest item quality
 
--- Blizzard's global table containing RGB color values for each item quality tier
-local QUALITY_COLORS = BAG_ITEM_QUALITY_COLORS
-QUALITY_COLORS[QUEST_QUALITY] = {r = 1.0, g = 0.82, b = 0.0} -- Custom gold color for quest items
+-- Quality color table using official API with lazy caching
+local QUALITY_COLORS = {
+	[QUEST_QUALITY] = {r = 1.0, g = 0.82, b = 0.0} -- Custom gold color for quest items
+}
+setmetatable(QUALITY_COLORS, {
+	__index = function(self, quality)
+		local r, g, b = C_Item.GetItemQualityColor(quality)
+		if r then
+			self[quality] = {r = r, g = g, b = b}
+			return self[quality]
+		end
+	end
+})
+
+-- Quest objective cache (itemName → true), populated by Quest module
+addon.questObjectiveCache = {}
+
+-- Checks if an item is quest-related using API checks and quest log cache
+local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId)
+	-- if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
+	-- 	return true
+	-- end
+	if bagId and bagItemButtonId then
+		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
+		if info and (info.questID or info.isQuestItem) then return true end
+	end
+	return addon.questObjectiveCache[itemName]
+end
 
 -- Creates or returns existing colored border texture overlay for an item button
 local function createBorder(button)
@@ -63,6 +54,7 @@ local function createBorder(button)
 
 	local buttonName = button:GetName()
 	local iconTexture = buttonName and _G[buttonName .. "IconTexture"]
+		or button.Icon or button.icon
 	border:SetAllPoints(iconTexture or button)
 	border:Hide()
 
@@ -127,33 +119,27 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	end
 
 	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
-	if not itemQuality then return end
+	if not itemQuality then
+		-- Item data not cached yet - wait for it to load, then retry
+		local item = type(itemIdOrLink) == "number"
+			and Item:CreateFromItemID(itemIdOrLink)
+			or Item:CreateFromItemLink(itemIdOrLink)
+		if item and not item:IsItemEmpty() then
+			item:ContinueOnItemLoad(function()
+				C_Timer.After(0, function()
+					addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
+				end)
+			end)
+		end
+		return
+	end
 
-	-- Upgrade quest items to special quality (check both GetItemInfo and GetContainerItemQuestInfo)
-	local containerInfo = bagId and bagItemButtonId and C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-	local isQuestItem = (itemClassId == 12)
-		or (itemType == "Quest")
-		or (containerInfo and containerInfo.questID)
-		or (containerInfo and containerInfo.isQuestItem)
-		or addon.questObjectiveCache[itemName]
-
-	if itemQuality <= QUALITY_COMMON and isQuestItem then
+	-- Upgrade quest items to special quality
+	if itemQuality <= QUALITY_COMMON and checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId) then
 		itemQuality = QUEST_QUALITY
 	end
 
 	button.beginsQuest = nil
 	updateBorder(button, itemQuality)
 	applyQuestMarker(button, bagId, bagItemButtonId)
-end
-
--- Registers callback to be notified when quest objectives change
-addon.registerQuestChangeListener = function(callback)
-	table.insert(questChangeListeners, callback)
-end
-
--- Notifies all registered listeners that quest objectives have changed
-addon.onQuestObjectivesChanged = function()
-	for _, listener in ipairs(questChangeListeners) do
-		listener()
-	end
 end

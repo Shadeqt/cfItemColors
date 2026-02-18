@@ -16,7 +16,7 @@ local function updateSingleBankSlot(slotId)
 	if not bankSlotButton then return end
 
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
-	addon.applyQualityColor(bankSlotButton, containerItemId)
+	addon.applyQualityColor(bankSlotButton, containerItemId, BANK_CONTAINER, slotId)
 end
 
 -- Updates all bank container slots

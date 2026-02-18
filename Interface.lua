@@ -57,13 +57,6 @@ allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -
 allCheckboxes.merchantCheck = createCheckbox(panel, titleSeparator, 250, -8, addon.MODULES.MERCHANT)
 allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, addon.MODULES.PROFESSIONS)
 allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, addon.MODULES.QUEST)
-allCheckboxes.questObjectiveCheck = createCheckbox(panel, allCheckboxes.questCheck, 0, -8, addon.MODULES.QUEST_OBJECTIVE)
-
--- Explanatory note for Quest Objectives
-local questObjNote = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-questObjNote:SetPoint("TOPLEFT", allCheckboxes.questObjectiveCheck, "BOTTOMLEFT", 4, 0)
-questObjNote:SetText("|cffffffffDetects common items (materials, reagents, etc.) needed for active quests|r")
-
 local section1Separator = createSeparator(panel, allCheckboxes.lootCheck, 500, -8)
 
 -- Group 2 Header: Player Trading

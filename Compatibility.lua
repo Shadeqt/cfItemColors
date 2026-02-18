@@ -1,105 +1,43 @@
 local addon = cfItemColors
 local db = cfItemColorsDB
 
--- Raw bag addon names (readable format with spaces/hyphens/numbers)
-local RAW_BAG_ADDON_NAMES = {
-	"Bagnon",
-	"Baganator",
-	"ArkInventory",
-	"AdiBags",
-	"BetterBags",
-	"OneBag3",
-	"Bagnonium",
-	"Baggins",
-	"BankItems",
-	"BankStack",
-	"OneBank3",
-	"Inventorian",
-	"Baud Bag",
-	"Sorted",
-	"LiteBag",
+-- Known bag addon folder names
+local KNOWN_BAG_ADDONS = {
+	"Bagnon", "Baganator", "ArkInventory", "AdiBags", "BetterBags",
+	"OneBag3", "Bagnonium", "Baggins", "BankItems", "BankStack",
+	"OneBank3", "Inventorian", "BaudBag", "Sorted", "LiteBag",
 }
 
--- Raw auction house addon names
-local RAW_AH_ADDON_NAMES = {
-	"Auctionator",
-	"TradeSkillMaster",
-	"Auctioneer",
-	"AuctionMaster",
-	"aux",
-	"AuctionLite",
-	"AuctionBuddy",
-	"AuctionFaster",
+-- Known auction house addon folder names
+local KNOWN_AH_ADDONS = {
+	"Auctionator", "TradeSkillMaster", "Auctioneer", "AuctionMaster",
+	"aux", "AuctionLite", "AuctionBuddy", "AuctionFaster",
 }
 
--- Normalizes addon name for comparison (trim, lowercase, strip separators/numbers)
-local function normalizeAddonName(str)
-	return str:gsub("^%s*(.-)%s*$", "%1"):lower():gsub("[%s%-_%d]", "")
+-- Returns first loaded addon name from list, or nil
+local function findLoadedAddon(addonList)
+	for _, name in ipairs(addonList) do
+		if C_AddOns.IsAddOnLoaded(name) then
+			return name
+		end
+	end
 end
 
--- Generate normalized whitelists at load time
-local KNOWN_BAG_ADDONS = {}
-for _, name in ipairs(RAW_BAG_ADDON_NAMES) do
-	local normalized = normalizeAddonName(name)
-	KNOWN_BAG_ADDONS[normalized] = true
-end
-
-local KNOWN_AH_ADDONS = {}
-for _, name in ipairs(RAW_AH_ADDON_NAMES) do
-	local normalized = normalizeAddonName(name)
-	KNOWN_AH_ADDONS[normalized] = true
-end
-
--- Map module names to their conflict detection whitelists
+-- Map module names to their conflict addon lists
 local MODULE_CONFLICT_MAP = {
 	Bags = KNOWN_BAG_ADDONS,
 	Bank = KNOWN_BAG_ADDONS,
 	AuctionHouse = KNOWN_AH_ADDONS,
 }
 
--- Checks if any addon from whitelist is active (returns isActive, addonName)
-local function isAddonTypeActive(whitelist)
-	for i = 1, C_AddOns.GetNumAddOns() do
-		if C_AddOns.IsAddOnLoaded(i) then
-			local name = C_AddOns.GetAddOnInfo(i)
-
-			-- Gather all metadata fields
-			local fields = {
-				name,
-				C_AddOns.GetAddOnMetadata(i, "Title"),
-				C_AddOns.GetAddOnMetadata(i, "Notes"),
-				C_AddOns.GetAddOnMetadata(i, "X-Notes"),
-				C_AddOns.GetAddOnMetadata(i, "Category"),
-				C_AddOns.GetAddOnMetadata(i, "X-Category"),
-			}
-
-			-- Check each field against whitelist
-			for _, field in ipairs(fields) do
-				if field then
-					local normalized = normalizeAddonName(field)
-
-					-- Check if normalized field contains any whitelist entry
-					for addonName, _ in pairs(whitelist) do
-						if normalized:find(addonName, 1, true) then
-							return true, name
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return false, nil
-end
-
 -- Run conflict detection and update database
 for moduleName, _ in pairs(addon.MODULES) do
-	local conflictList = MODULE_CONFLICT_MAP[moduleName]
-	if conflictList then
-		local isConflict, addonName = isAddonTypeActive(conflictList)
-		if isConflict then
+	local addonList = MODULE_CONFLICT_MAP[moduleName]
+	if addonList then
+		local conflictAddon = findLoadedAddon(addonList)
+		if conflictAddon then
 			db[moduleName].enabled = false
-			db[moduleName].conflict = addonName .. " detected"
+			db[moduleName].conflict = conflictAddon .. " detected"
 		end
 	end
 end

@@ -13,7 +13,6 @@ Interface.lua
 
 # Domain modules
 #Modules\AuctionHouse.lua
-Modules\QuestObjective.lua
 Modules\Bags.lua
 Modules\Bank.lua
 Modules\Character.lua

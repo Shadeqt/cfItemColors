@@ -16,7 +16,7 @@ addon.MODULES = {
 	MERCHANT = "Merchant",
 	PROFESSIONS = "Professions",
 	QUEST = "Quest",
-	QUEST_OBJECTIVE = "QuestObjective",
+
 	TRADE = "Trade",
 }
 

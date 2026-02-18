@@ -30,6 +30,3 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 		updateAllEquipmentSlots()
 	end
 end)
-
--- Register for quest cache change notifications
-addon.registerQuestChangeListener(updateAllEquipmentSlots)

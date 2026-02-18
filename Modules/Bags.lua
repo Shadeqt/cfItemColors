@@ -41,6 +41,3 @@ eventFrame:SetScript("OnEvent", updateAllBagColors)
 
 hooksecurefunc("ToggleBag", updateSingleBagColors)  -- User clicks bag icons or B keybind
 hooksecurefunc("OpenBag", updateSingleBagColors)  	-- System-opened bags (vendor, mail, bank)
-
--- Register for quest cache change notifications
-addon.registerQuestChangeListener(updateAllBagColors)

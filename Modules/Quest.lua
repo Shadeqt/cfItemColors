@@ -49,3 +49,31 @@ end
 hooksecurefunc("QuestInfo_Display", updateQuestInfoRewards)  				-- Quest details shown at NPC
 hooksecurefunc("QuestLog_Update", updateQuestLogRewards)  					-- Quest log refreshed
 hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)  -- Quest progress items shown
+
+-- Build and maintain quest objective cache from quest log
+local function rebuildQuestObjectiveCache()
+	wipe(addon.questObjectiveCache)
+	for i = 1, GetNumQuestLogEntries() do
+		local _, _, _, isHeader = GetQuestLogTitle(i)
+		if not isHeader then
+			for j = 1, GetNumQuestLeaderBoards(i) do
+				local text, objType = GetQuestLogLeaderBoard(j, i)
+				if objType == "item" and text then
+					local name = text:match("^(.-):%s*%d+/%d+")
+					if name then addon.questObjectiveCache[name] = true end
+				end
+			end
+		end
+	end
+end
+
+local questEventFrame = CreateFrame("Frame")
+questEventFrame:RegisterEvent("QUEST_ACCEPTED")
+questEventFrame:RegisterEvent("QUEST_REMOVED")
+questEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+questEventFrame:SetScript("OnEvent", function(self, event)
+	if event == "PLAYER_ENTERING_WORLD" then
+		self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+	end
+	rebuildQuestObjectiveCache()
+end)
