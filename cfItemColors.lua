@@ -27,17 +27,23 @@ setmetatable(QUALITY_COLORS, {
 
 -- Quest objective cache (itemName → true), populated by Quest module
 addon.questObjectiveCache = {}
+addon.questObjectiveText = ""
 
 -- Checks if an item is quest-related using API checks and quest log cache
 local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId)
-	-- if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
-	-- 	return true
-	-- end
+	if addon.questObjectiveCache[itemName] then return true end
 	if bagId and bagItemButtonId then
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
 		if info and (info.questID or info.isQuestItem) then return true end
 	end
-	return addon.questObjectiveCache[itemName]
+	-- Fallback: quest-class items mentioned in quest description text
+	if (itemClassId == Enum.ItemClass.Questitem or itemType == "Quest")
+		and addon.questObjectiveText:find(itemName, 1, true) then
+		-- DEBUG
+		print("|cff00ff00[cfIC]|r Description fallback:", itemName)
+		-- END DEBUG
+		return true
+	end
 end
 
 -- Creates or returns existing colored border texture overlay for an item button

@@ -5,9 +5,7 @@ local addon = cfItemColors
 if not db[addon.MODULES.QUEST].enabled then return end
 
 -- Updates quest reward buttons (choices and guaranteed rewards)
-local function updateQuestRewards(buttonPrefix)
-	local isQuestLog = QuestLogFrame and QuestLogFrame:IsVisible()
-
+local function updateQuestRewards(buttonPrefix, isQuestLog)
 	local numChoices = isQuestLog and GetNumQuestLogChoices() or GetNumQuestChoices()
 	local numRewards = isQuestLog and GetNumQuestLogRewards() or GetNumQuestRewards()
 	local getItemLink = isQuestLog and GetQuestLogItemLink or GetQuestItemLink
@@ -38,12 +36,12 @@ end
 
 -- Updates quest detail rewards at NPC
 local function updateQuestInfoRewards()
-	updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem")
+	updateQuestRewards("QuestInfoRewardsFrameQuestInfoItem", false)
 end
 
 -- Updates quest log rewards
 local function updateQuestLogRewards()
-	updateQuestRewards("QuestLogItem")
+	updateQuestRewards("QuestLogItem", true)
 end
 
 hooksecurefunc("QuestInfo_Display", updateQuestInfoRewards)  				-- Quest details shown at NPC
@@ -53,18 +51,30 @@ hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)  -- Q
 -- Build and maintain quest objective cache from quest log
 local function rebuildQuestObjectiveCache()
 	wipe(addon.questObjectiveCache)
+	local allText = {}
+	local savedSelection = GetQuestLogSelection()
 	for i = 1, GetNumQuestLogEntries() do
 		local _, _, _, isHeader = GetQuestLogTitle(i)
 		if not isHeader then
+			-- Grab quest description text (requires selecting the entry)
+			SelectQuestLogEntry(i)
+			local description = GetQuestLogQuestText()
+			if description then allText[#allText + 1] = description end
+
 			for j = 1, GetNumQuestLeaderBoards(i) do
 				local text, objType = GetQuestLogLeaderBoard(j, i)
-				if objType == "item" and text then
-					local name = text:match("^(.-):%s*%d+/%d+")
-					if name then addon.questObjectiveCache[name] = true end
+				if text then
+					allText[#allText + 1] = text
+					if objType == "item" then
+						local name = text:match("^(.-):%s*%d+/%d+")
+						if name then addon.questObjectiveCache[name] = true end
+					end
 				end
 			end
 		end
 	end
+	SelectQuestLogEntry(savedSelection)
+	addon.questObjectiveText = table.concat(allText, "\n")
 end
 
 local questEventFrame = CreateFrame("Frame")
