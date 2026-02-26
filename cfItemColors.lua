@@ -36,12 +36,8 @@ local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemBut
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
 		if info and (info.questID or info.isQuestItem) then return true end
 	end
-	-- Fallback: quest-class items mentioned in quest description text
-	if (itemClassId == Enum.ItemClass.Questitem or itemType == "Quest")
-		and addon.questObjectiveText:find(itemName, 1, true) then
-		-- DEBUG
-		print("|cff00ff00[cfIC]|r Description fallback:", itemName)
-		-- END DEBUG
+	-- Fallback: items classified as quest items by the game
+	if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
 		return true
 	end
 end

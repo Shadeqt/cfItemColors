@@ -48,6 +48,19 @@ hooksecurefunc("QuestInfo_Display", updateQuestInfoRewards)  				-- Quest detail
 hooksecurefunc("QuestLog_Update", updateQuestLogRewards)  					-- Quest log refreshed
 hooksecurefunc("QuestFrameProgressItems_Update", updateQuestRequiredItems)  -- Quest progress items shown
 
+-- Re-color when item data arrives from server (GetQuestItemLink returns nil until this fires)
+local questItemFrame = CreateFrame("Frame")
+questItemFrame:RegisterEvent("QUEST_ITEM_UPDATE")
+questItemFrame:SetScript("OnEvent", function()
+	if QuestFrame and QuestFrame:IsShown() then
+		updateQuestInfoRewards()
+		updateQuestRequiredItems()
+	end
+	if QuestLogFrame and QuestLogFrame:IsShown() then
+		updateQuestLogRewards()
+	end
+end)
+
 -- Build and maintain quest objective cache from quest log
 local function rebuildQuestObjectiveCache()
 	wipe(addon.questObjectiveCache)
