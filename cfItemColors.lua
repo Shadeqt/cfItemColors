@@ -31,14 +31,18 @@ addon.questObjectiveText = ""
 
 -- Checks if an item is quest-related using API checks and quest log cache
 local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId)
+	-- Fastest: quest objective cache lookup
 	if addon.questObjectiveCache[itemName] then return true end
+	-- Fast: item class check (skipped in active-quest-only mode)
+	if not cfItemColorsDB.activeQuestOnly.enabled then
+		if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
+			return true
+		end
+	end
+	-- Slowest: container API call
 	if bagId and bagItemButtonId then
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
 		if info and (info.questID or info.isQuestItem) then return true end
-	end
-	-- Fallback: items classified as quest items by the game
-	if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
-		return true
 	end
 end
 

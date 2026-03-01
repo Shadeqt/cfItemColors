@@ -1,4 +1,3 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- WoW constants
@@ -29,7 +28,7 @@ end
 -- Deferred initialization function (called after init completes)
 local function initializeTradeModule()
 	-- Module enable check
-	if not db[addon.MODULES.TRADE].enabled then return end
+	if not cfItemColorsDB[addon.MODULES.TRADE].enabled then return end
 
 	-- Update trade slot colors on window open and item changes
 	local eventFrame = CreateFrame("Frame")

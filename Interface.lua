@@ -1,4 +1,3 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Settings panel frame
@@ -31,8 +30,8 @@ end
 
 -- Check if pending state differs from saved database
 local function hasUnsavedChanges()
-	for moduleName, pending in pairs(pendingState) do
-		if pending ~= db[moduleName].enabled then
+	for key, pending in pairs(pendingState) do
+		if pending ~= cfItemColorsDB[key].enabled then
 			return true
 		end
 	end
@@ -57,6 +56,12 @@ allCheckboxes.lootCheck = createCheckbox(panel, allCheckboxes.inspectCheck, 0, -
 allCheckboxes.merchantCheck = createCheckbox(panel, titleSeparator, 250, -8, addon.MODULES.MERCHANT)
 allCheckboxes.professionsCheck = createCheckbox(panel, allCheckboxes.merchantCheck, 0, -8, addon.MODULES.PROFESSIONS)
 allCheckboxes.questCheck = createCheckbox(panel, allCheckboxes.professionsCheck, 0, -8, addon.MODULES.QUEST)
+
+-- Sub-option: active quest items only
+local activeQuestCheck = CreateFrame("CheckButton", nil, panel, "InterfaceOptionsCheckButtonTemplate")
+activeQuestCheck:SetPoint("TOPLEFT", allCheckboxes.questCheck, "BOTTOMLEFT", 20, -4)
+activeQuestCheck.Text:SetText("Active quest items only")
+
 local section1Separator = createSeparator(panel, allCheckboxes.lootCheck, 500, -8)
 
 -- Group 2 Header: Player Trading
@@ -77,8 +82,8 @@ reloadBtn:SetSize(120, 25)
 reloadBtn:SetText("Save Changes")
 reloadBtn:SetScript("OnClick", function()
 	-- Commit pending changes to database
-	for moduleName, enabled in pairs(pendingState) do
-		db[moduleName].enabled = enabled
+	for key, enabled in pairs(pendingState) do
+		cfItemColorsDB[key].enabled = enabled
 	end
 	ReloadUI()
 end)
@@ -103,13 +108,13 @@ local function initializeCheckboxes()
 		pendingState[k] = nil
 	end
 	for _, moduleName in pairs(addon.MODULES) do
-		local moduleData = db[moduleName]
+		local moduleData = cfItemColorsDB[moduleName]
 		pendingState[moduleName] = moduleData.enabled
 	end
 
 	-- Configure each checkbox with conflict detection
 	for _, check in pairs(allCheckboxes) do
-		local moduleData = db[check.moduleName]
+		local moduleData = cfItemColorsDB[check.moduleName]
 		local enabled, conflict = moduleData.enabled, moduleData.conflict
 
 		if conflict then
@@ -140,6 +145,33 @@ local function initializeCheckboxes()
 			end
 		end
 	end
+
+	-- Initialize activeQuestOnly sub-checkbox
+	pendingState.activeQuestOnly = cfItemColorsDB.activeQuestOnly.enabled
+	activeQuestCheck:SetChecked(cfItemColorsDB.activeQuestOnly.enabled)
+	activeQuestCheck:SetScript("OnClick", function(self)
+		pendingState.activeQuestOnly = self:GetChecked()
+		if hasUnsavedChanges() then warning:Show() else warning:Hide() end
+	end)
+
+	-- Sync sub-checkbox with Quest module state
+	local function updateActiveQuestState()
+		local questData = cfItemColorsDB[addon.MODULES.QUEST]
+		local questUsable = pendingState[addon.MODULES.QUEST] and not questData.conflict
+		if questUsable then
+			activeQuestCheck:Enable()
+		else
+			activeQuestCheck:SetChecked(false)
+			activeQuestCheck:Disable()
+			pendingState.activeQuestOnly = false
+		end
+	end
+	updateActiveQuestState()
+
+	allCheckboxes.questCheck:HookScript("OnClick", function()
+		updateActiveQuestState()
+		if hasUnsavedChanges() then warning:Show() else warning:Hide() end
+	end)
 end
 
 -- Initialize interface checkboxes after init completes

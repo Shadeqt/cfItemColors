@@ -1,8 +1,7 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module enable check
-if not db[addon.MODULES.INSPECT].enabled then return end
+if not cfItemColorsDB[addon.MODULES.INSPECT].enabled then return end
 
 -- Clears borders for all inspect slots
 local function clearAllInspectSlots()

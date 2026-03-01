@@ -1,5 +1,4 @@
 local addon = cfItemColors
-local db = cfItemColorsDB
 
 -- Known bag addon folder names
 local KNOWN_BAG_ADDONS = {
@@ -36,8 +35,8 @@ for moduleName, _ in pairs(addon.MODULES) do
 	if addonList then
 		local conflictAddon = findLoadedAddon(addonList)
 		if conflictAddon then
-			db[moduleName].enabled = false
-			db[moduleName].conflict = conflictAddon .. " detected"
+			cfItemColorsDB[moduleName].enabled = false
+			cfItemColorsDB[moduleName].conflict = conflictAddon .. " detected"
 		end
 	end
 end

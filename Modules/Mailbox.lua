@@ -1,4 +1,3 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- WoW constants
@@ -56,7 +55,7 @@ end
 -- Deferred initialization function (called after init completes)
 local function initializeMailboxModule()
 	-- Module enable check
-	if not db[addon.MODULES.MAILBOX].enabled then return end
+	if not cfItemColorsDB[addon.MODULES.MAILBOX].enabled then return end
 
 	-- Update colors on mailbox changes - inbox, send form, and sent mail
 	local eventFrame = CreateFrame("Frame")

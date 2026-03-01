@@ -1,8 +1,6 @@
 -- Create addon namespace
 cfItemColors = {}
 
--- Localize for performance and consistency
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module name constants
@@ -44,24 +42,13 @@ for _, moduleName in pairs(addon.MODULES) do
 		conflict = nil
 	}
 end
+dbDefaults.activeQuestOnly = { enabled = false }
 
--- Initialize database immediately at file load
-if not db then
-	db = {}
-	cfItemColorsDB = db
-end
-
--- Apply defaults for any missing keys
+-- Create DB with defaults at file load (modules check enabled state at load time)
+if not cfItemColorsDB then cfItemColorsDB = {} end
 for key, value in pairs(dbDefaults) do
-	if db[key] == nil then
-		db[key] = value
-	end
-end
-
--- Remove keys from DB that aren't in defaults
-for key in pairs(db) do
-	if dbDefaults[key] == nil then
-		db[key] = nil
+	if cfItemColorsDB[key] == nil then
+		cfItemColorsDB[key] = value
 	end
 end
 
@@ -75,14 +62,29 @@ function addon:onInitComplete()
 	end
 end
 
--- Self-found detection on addon load
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", function(self, event, addonName)
 	if addonName ~= "cfItemColors" then return end
-
-	-- Unregister event (only need to check once)
 	self:UnregisterEvent("ADDON_LOADED")
+
+	-- Initialize database from SavedVariables (available at ADDON_LOADED)
+	local db = cfItemColorsDB or {}
+	cfItemColorsDB = db
+
+	-- Apply defaults for any missing keys
+	for key, value in pairs(dbDefaults) do
+		if db[key] == nil then
+			db[key] = value
+		end
+	end
+
+	-- Remove keys from DB that aren't in defaults
+	for key in pairs(db) do
+		if dbDefaults[key] == nil then
+			db[key] = nil
+		end
+	end
 
 	-- Check for self-found status and disable modules if needed
 	if isPlayerSelfFound() then

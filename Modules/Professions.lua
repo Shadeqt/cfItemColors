@@ -1,8 +1,7 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module enable check
-if not db[addon.MODULES.PROFESSIONS].enabled then return end
+if not cfItemColorsDB[addon.MODULES.PROFESSIONS].enabled then return end
 
 -- Module constants
 local NUM_REAGENT_SLOTS = 8 -- 8, maximum reagent slots in tradeskill window

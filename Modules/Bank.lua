@@ -1,8 +1,7 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module enable check
-if not db[addon.MODULES.BANK].enabled then return end
+if not cfItemColorsDB[addon.MODULES.BANK].enabled then return end
 
 -- WoW constants
 local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main bank storage

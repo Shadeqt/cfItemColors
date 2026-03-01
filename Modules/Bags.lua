@@ -1,8 +1,7 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module enable check
-if not db[addon.MODULES.BAGS].enabled then return end
+if not cfItemColorsDB[addon.MODULES.BAGS].enabled then return end
 
 -- WoW constants
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS 		-- 4, player bag slots (excludes backpack slot 0)

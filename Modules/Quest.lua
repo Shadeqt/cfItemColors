@@ -1,8 +1,7 @@
-local db = cfItemColorsDB
 local addon = cfItemColors
 
 -- Module enable check
-if not db[addon.MODULES.QUEST].enabled then return end
+if not cfItemColorsDB[addon.MODULES.QUEST].enabled then return end
 
 -- Updates quest reward buttons (choices and guaranteed rewards)
 local function updateQuestRewards(buttonPrefix, isQuestLog)
