@@ -25,25 +25,43 @@ setmetatable(QUALITY_COLORS, {
 	end
 })
 
--- Quest objective cache (itemName → true), populated by Quest module
-addon.questObjectiveCache = {}
+-- Quest item cache (itemName → boolean), lazily populated on bag scan, wiped on quest changes
+addon.questItemCache = {}
 addon.questObjectiveText = ""
 
--- Checks if an item is quest-related using API checks and quest log cache
+-- Checks if an item is quest-related using lazy cache
+-- OFF: classId OR isQuestItem OR beginsQuest OR questCache
+-- ON:  isQuestItem OR beginsQuest OR questCache
 local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId)
-	-- Fastest: quest objective cache lookup
-	if addon.questObjectiveCache[itemName] then return true end
-	-- Fast: item class check (skipped in active-quest-only mode)
+	local cached = addon.questItemCache[itemName]
+	if cached ~= nil then return cached end
+
+	local isQuest = false
+
+	-- classId (OFF only)
 	if not cfItemColorsDB.activeQuestOnly.enabled then
 		if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
-			return true
+			isQuest = true
 		end
 	end
-	-- Slowest: container API call
+
+	-- Container API: isQuestItem + beginsQuest (both modes)
 	if bagId and bagItemButtonId then
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-		if info and (info.questID or info.isQuestItem) then return true end
+		if info then
+			if info.isQuestItem or info.questID then
+				isQuest = true
+			end
+		end
 	end
+
+	-- questCache: item name found in active quest text (both modes)
+	if addon.questObjectiveText:find(itemName, 1, true) then
+		isQuest = true
+	end
+
+	addon.questItemCache[itemName] = isQuest
+	return isQuest
 end
 
 -- Creates or returns existing colored border texture overlay for an item button
@@ -118,6 +136,8 @@ end
 
 -- Applies quality-based border color to button or hides border for common items
 function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
+	if not button then return end
+
 	if not itemIdOrLink then
 		updateBorder(button, nil)
 		applyQuestMarker(button, nil, nil)

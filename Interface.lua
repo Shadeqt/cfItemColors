@@ -174,9 +174,14 @@ local function initializeCheckboxes()
 	end)
 end
 
--- Initialize interface checkboxes after init completes
--- (Must wait for self-found detection to complete before reading DB)
-addon:registerInitListener(initializeCheckboxes)
+-- Initialize interface checkboxes after SavedVariables are available
+local interfaceInitFrame = CreateFrame("Frame")
+interfaceInitFrame:RegisterEvent("ADDON_LOADED")
+interfaceInitFrame:SetScript("OnEvent", function(self, _, addonName)
+	if addonName ~= "cfItemColors" then return end
+	self:UnregisterEvent("ADDON_LOADED")
+	initializeCheckboxes()
+end)
 
 -- Register with settings API (for modern WoW versions)
 if Settings and Settings.RegisterCanvasLayoutCategory then

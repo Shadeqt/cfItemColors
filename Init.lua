@@ -18,22 +18,6 @@ addon.MODULES = {
 	TRADE = "Trade",
 }
 
--- Callback system for modules waiting on init completion
-addon.initListeners = {}
-
--- WoW constants
-local BUFF_MAX_DISPLAY = BUFF_MAX_DISPLAY -- 32, max buffs on player
-
--- Detects if player has self-found adventurer buff
-local function isPlayerSelfFound()
-	for i = 1, BUFF_MAX_DISPLAY do
-		local _, _, _, _, _, _, _, _, _, spellId = UnitBuff("player", i)
-		if not spellId then return false end
-		if spellId == 431567 then return true end
-	end
-	return false
-end
-
 -- Database defaults
 local dbDefaults = {}
 for _, moduleName in pairs(addon.MODULES) do
@@ -49,16 +33,6 @@ if not cfItemColorsDB then cfItemColorsDB = {} end
 for key, value in pairs(dbDefaults) do
 	if cfItemColorsDB[key] == nil then
 		cfItemColorsDB[key] = value
-	end
-end
-
-function addon:registerInitListener(callback)
-	table.insert(self.initListeners, callback)
-end
-
-function addon:onInitComplete()
-	for _, listener in ipairs(self.initListeners) do
-		listener()
 	end
 end
 
@@ -86,12 +60,4 @@ initFrame:SetScript("OnEvent", function(self, event, addonName)
 		end
 	end
 
-	-- Check for self-found status and disable modules if needed
-	if isPlayerSelfFound() then
-		db[addon.MODULES.TRADE].enabled = false
-		db[addon.MODULES.MAILBOX].enabled = false
-	end
-
-	-- Trigger module initialization callbacks
-	addon:onInitComplete()
 end)

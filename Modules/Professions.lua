@@ -41,24 +41,30 @@ local function updateClassTrainerIcon()
 	addon.applyQualityColor(classTrainerIconButton, itemLink)
 end
 
--- Initialize profession UI hooks when their addons load
-local eventFrame = CreateFrame("Frame")
-
-local function onAddonLoaded(_, _, addonName)
-	if addonName == "Blizzard_TradeSkillUI" then
-		hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
-	elseif addonName == "Blizzard_TrainerUI" then
-		hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
-	end
-end
-
--- Check if already loaded (e.g. after /reload), otherwise wait
+-- Hook TradeSkill UI when loaded
 if C_AddOns.IsAddOnLoaded("Blizzard_TradeSkillUI") then
 	hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
-end
-if C_AddOns.IsAddOnLoaded("Blizzard_TrainerUI") then
-	hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
+else
+	local tsFrame = CreateFrame("Frame")
+	tsFrame:RegisterEvent("ADDON_LOADED")
+	tsFrame:SetScript("OnEvent", function(self, _, addonName)
+		if addonName == "Blizzard_TradeSkillUI" then
+			self:UnregisterEvent("ADDON_LOADED")
+			hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
+		end
+	end)
 end
 
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:SetScript("OnEvent", onAddonLoaded)
+-- Hook Trainer UI when loaded
+if C_AddOns.IsAddOnLoaded("Blizzard_TrainerUI") then
+	hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
+else
+	local trFrame = CreateFrame("Frame")
+	trFrame:RegisterEvent("ADDON_LOADED")
+	trFrame:SetScript("OnEvent", function(self, _, addonName)
+		if addonName == "Blizzard_TrainerUI" then
+			self:UnregisterEvent("ADDON_LOADED")
+			hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
+		end
+	end)
+end

@@ -6,8 +6,8 @@ if not cfItemColorsDB[addon.MODULES.BANK].enabled then return end
 -- WoW constants
 local BANK_CONTAINER = BANK_CONTAINER -- -1, bank container ID representing main bank storage
 
--- Module constants
-local NUM_BANK_SLOTS = 24 -- 24, total slots in main bank container (excludes bag slots)
+-- NOTE: NUM_BANKGENERIC_SLOTS is 24 in Classic Era (Blizzard bug), actual bank has 28 slots
+local NUM_BANK_SLOTS
 
 -- Updates a single bank container slot with quality color
 local function updateSingleBankSlot(slotId)
@@ -33,6 +33,7 @@ eventFrame:SetScript("OnEvent", function(_, event, slotId)
 	if event == "PLAYERBANKSLOTS_CHANGED" then
 		updateSingleBankSlot(slotId)
 	elseif event == "BANKFRAME_OPENED" then
+		NUM_BANK_SLOTS = NUM_BANK_SLOTS or C_Container.GetContainerNumSlots(BANK_CONTAINER)
 		updateAllBankSlots()
 	end
 end)

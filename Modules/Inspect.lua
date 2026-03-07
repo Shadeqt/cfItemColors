@@ -13,7 +13,7 @@ local function clearAllInspectSlots()
 	end
 end
 
--- Updates a single inspect slot, with async retry if link isn't available yet
+-- Updates a single inspect slot (applyQualityColor handles async item loading)
 local function updateInspectSlot(slotId)
 	if not InspectFrame or not InspectFrame:IsShown() then return end
 	local unit = InspectFrame.unit
@@ -21,28 +21,7 @@ local function updateInspectSlot(slotId)
 	if not inspectButton then return end
 
 	local itemLink = GetInventoryItemLink(unit, slotId)
-	if itemLink then
-		addon.applyQualityColor(inspectButton, itemLink)
-		return
-	end
-
-	-- No link — check if an item actually exists in this slot
-	local itemId = GetInventoryItemID(unit, slotId)
-	if not itemId then
-		addon.applyQualityColor(inspectButton, nil)
-		return
-	end
-
-	-- Item exists but link not available yet — wait for it to load
-	local item = Item:CreateFromItemID(itemId)
-	if item and not item:IsItemEmpty() then
-		item:ContinueOnItemLoad(function()
-			if InspectFrame and InspectFrame:IsShown() then
-				local link = GetInventoryItemLink(unit, slotId)
-				addon.applyQualityColor(inspectButton, link or itemId)
-			end
-		end)
-	end
+	addon.applyQualityColor(inspectButton, itemLink or GetInventoryItemID(unit, slotId))
 end
 
 -- Updates all inspect equipment slots

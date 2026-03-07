@@ -60,28 +60,22 @@ questItemFrame:SetScript("OnEvent", function()
 	end
 end)
 
--- Build and maintain quest objective cache from quest log
-local function rebuildQuestObjectiveCache()
-	wipe(addon.questObjectiveCache)
+-- Build quest text and reset lazy item cache
+local function rebuildQuestText()
+	wipe(addon.questItemCache)
 	local allText = {}
 	local savedSelection = GetQuestLogSelection()
 	for i = 1, GetNumQuestLogEntries() do
 		local _, _, _, isHeader = GetQuestLogTitle(i)
 		if not isHeader then
-			-- Grab quest description text (requires selecting the entry)
 			SelectQuestLogEntry(i)
-			local description = GetQuestLogQuestText()
+			local description, objectives = GetQuestLogQuestText()
+			if objectives then allText[#allText + 1] = objectives end
 			if description then allText[#allText + 1] = description end
 
 			for j = 1, GetNumQuestLeaderBoards(i) do
-				local text, objType = GetQuestLogLeaderBoard(j, i)
-				if text then
-					allText[#allText + 1] = text
-					if objType == "item" then
-						local name = text:match("^(.-):%s*%d+/%d+")
-						if name then addon.questObjectiveCache[name] = true end
-					end
-				end
+				local text = GetQuestLogLeaderBoard(j, i)
+				if text then allText[#allText + 1] = text end
 			end
 		end
 	end
@@ -92,10 +86,10 @@ end
 local questEventFrame = CreateFrame("Frame")
 questEventFrame:RegisterEvent("QUEST_ACCEPTED")
 questEventFrame:RegisterEvent("QUEST_REMOVED")
-questEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+questEventFrame:RegisterEvent("QUEST_LOG_UPDATE")
 questEventFrame:SetScript("OnEvent", function(self, event)
-	if event == "PLAYER_ENTERING_WORLD" then
-		self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+	if event == "QUEST_LOG_UPDATE" then
+		self:UnregisterEvent("QUEST_LOG_UPDATE")
 	end
-	rebuildQuestObjectiveCache()
+	rebuildQuestText()
 end)
