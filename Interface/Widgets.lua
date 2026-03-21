@@ -88,17 +88,12 @@ function Widgets.CreateCheckbox(anchor, label, dbKey, col2, dependency)
 		checkbox:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -10)
 	end
 	checkbox.Text:SetText(label)
-	checkbox.dbKey = dbKey
 	checkbox:SetHitRectInsets(0, -checkbox.Text:GetStringWidth(), 0, 0)
 	checkbox:SetScript("OnShow", function(self)
-		local data = cfItemColorsDB and cfItemColorsDB[dbKey]
-		local enabled = data and data.enabled
-		self:SetChecked(enabled)
-		Widgets.pendingState[dbKey] = enabled
+		self:SetChecked(cfItemColorsDB and cfItemColorsDB[dbKey] and cfItemColorsDB[dbKey].enabled)
 	end)
 	checkbox:SetScript("OnClick", function(self)
-		Widgets.pendingState[dbKey] = self:GetChecked()
-		Widgets.UpdateWarning()
+		cfItemColorsDB[dbKey].enabled = self:GetChecked()
 	end)
 
 	if dependency then
@@ -118,17 +113,4 @@ function Widgets.CreateCheckbox(anchor, label, dbKey, col2, dependency)
 
 	AddTooltip(checkbox, TOOLTIPS[dbKey])
 	return checkbox
-end
-
-function Widgets.ApplyConflict(checkbox)
-	local data = cfItemColorsDB and cfItemColorsDB[checkbox.dbKey]
-	if not data or not data.conflict then return end
-	checkbox:Disable()
-	checkbox:SetChecked(false)
-	checkbox:SetScript("OnShow", nil)
-	checkbox:SetScript("OnClick", nil)
-	checkbox.Text:SetTextColor(0.5, 0.5, 0.5)
-	local text = checkbox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	text:SetPoint("LEFT", checkbox.Text, "RIGHT", 4, 0)
-	text:SetText("(" .. data.conflict .. ")")
 end

@@ -7,7 +7,7 @@
 
 # Core modules (load order matters)
 Init.lua
-Compatibility.lua
+ModIntegrations\BagAddons_Disable.lua
 Core.lua
 Interface\Widgets.lua
 Interface\Settings.lua
@@ -22,5 +22,5 @@ Modules\Mailbox.lua
 Modules\Merchant.lua
 Modules\Professions.lua
 Modules\Quest.lua
-Modules\QuestQuestie.lua
+ModIntegrations\Questie_QuestItems.lua
 Modules\Trade.lua

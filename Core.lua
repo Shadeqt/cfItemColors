@@ -28,43 +28,29 @@ setmetatable(QUALITY_COLORS, {
 -- Quest item cache (itemID → boolean), lazily populated on bag scan
 addon.questItemCache = {}
 
--- Checks if an item is quest-related using lazy cache
--- OFF: classId OR isQuestItem OR beginsQuest OR Questie
--- ON (requires Questie): Questie only
-local function checkQuestItem(itemID, itemName, itemClassId, bagId, bagItemButtonId)
+-- Checks if an item is quest-related using native Blizzard APIs
+-- Questie_QuestItems.lua overrides this to add Questie integration
+function addon.checkQuestItem(itemID, itemClassId, bagId, bagItemButtonId)
 	local cached = addon.questItemCache[itemID]
 	if cached ~= nil then return cached end
 
+	-- activeQuestOnly requires Questie override; native check can't fulfill it
+	if cfItemColorsDB.activeQuestOnly.enabled then return false end
+
 	local isQuest = false
 
-	-- classId (OFF only)
-	if not cfItemColorsDB.activeQuestOnly.enabled then
-		if itemClassId == Enum.ItemClass.Questitem then
-			isQuest = true
-		end
+	if itemClassId == Enum.ItemClass.Questitem then
+		isQuest = true
 	end
 
-	-- Container API: isQuestItem + beginsQuest (OFF only)
-	if not cfItemColorsDB.activeQuestOnly.enabled and bagId and bagItemButtonId then
+	if not isQuest and bagId and bagItemButtonId then
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-		if info then
-			if info.isQuestItem or info.questID then
-				isQuest = true
-			end
-		end
-	end
-
-	-- Questie integration (both modes)
-	if addon.questieTooltips then
-		if addon.questieTooltips.GetTooltip("i_" .. itemID) then
+		if info and (info.isQuestItem or info.questID) then
 			isQuest = true
 		end
 	end
 
-	-- Don't cache false if activeQuestOnly is ON and Questie isn't ready yet
-	if isQuest or not cfItemColorsDB.activeQuestOnly.enabled then
-		addon.questItemCache[itemID] = isQuest
-	end
+	addon.questItemCache[itemID] = isQuest
 	return isQuest
 end
 
@@ -169,7 +155,7 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	end
 
 	-- Upgrade quest items to special quality
-	if itemQuality <= QUALITY_COMMON and checkQuestItem(itemID, itemName, itemClassId, bagId, bagItemButtonId) then
+	if itemQuality <= QUALITY_COMMON and addon.checkQuestItem(itemID, itemClassId, bagId, bagItemButtonId) then
 		itemQuality = QUEST_QUALITY
 	end
 
