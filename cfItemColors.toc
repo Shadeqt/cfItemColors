@@ -8,8 +8,9 @@
 # Core modules (load order matters)
 Init.lua
 Compatibility.lua
-cfItemColors.lua
-Interface.lua
+Core.lua
+Interface\Widgets.lua
+Interface\Settings.lua
 
 # Domain modules
 Modules\Bags.lua
