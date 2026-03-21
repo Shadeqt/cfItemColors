@@ -7,12 +7,6 @@ local KNOWN_BAG_ADDONS = {
 	"OneBank3", "Inventorian", "BaudBag", "Sorted", "LiteBag",
 }
 
--- Known auction house addon folder names
-local KNOWN_AH_ADDONS = {
-	"Auctionator", "TradeSkillMaster", "Auctioneer", "AuctionMaster",
-	"aux", "AuctionLite", "AuctionBuddy", "AuctionFaster",
-}
-
 -- Returns first loaded addon name from list, or nil
 local function findLoadedAddon(addonList)
 	for _, name in ipairs(addonList) do
@@ -26,7 +20,6 @@ end
 local MODULE_CONFLICT_MAP = {
 	Bags = KNOWN_BAG_ADDONS,
 	Bank = KNOWN_BAG_ADDONS,
-	AuctionHouse = KNOWN_AH_ADDONS,
 }
 
 -- Run conflict detection and update database

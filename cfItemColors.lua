@@ -25,28 +25,27 @@ setmetatable(QUALITY_COLORS, {
 	end
 })
 
--- Quest item cache (itemName → boolean), lazily populated on bag scan, wiped on quest changes
+-- Quest item cache (itemID → boolean), lazily populated on bag scan
 addon.questItemCache = {}
-addon.questObjectiveText = ""
 
 -- Checks if an item is quest-related using lazy cache
--- OFF: classId OR isQuestItem OR beginsQuest OR questCache
--- ON:  isQuestItem OR beginsQuest OR questCache
-local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId)
-	local cached = addon.questItemCache[itemName]
+-- OFF: classId OR isQuestItem OR beginsQuest OR Questie
+-- ON (requires Questie): Questie only
+local function checkQuestItem(itemID, itemName, itemClassId, bagId, bagItemButtonId)
+	local cached = addon.questItemCache[itemID]
 	if cached ~= nil then return cached end
 
 	local isQuest = false
 
 	-- classId (OFF only)
 	if not cfItemColorsDB.activeQuestOnly.enabled then
-		if itemClassId == Enum.ItemClass.Questitem or itemType == "Quest" then
+		if itemClassId == Enum.ItemClass.Questitem then
 			isQuest = true
 		end
 	end
 
-	-- Container API: isQuestItem + beginsQuest (both modes)
-	if bagId and bagItemButtonId then
+	-- Container API: isQuestItem + beginsQuest (OFF only)
+	if not cfItemColorsDB.activeQuestOnly.enabled and bagId and bagItemButtonId then
 		local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
 		if info then
 			if info.isQuestItem or info.questID then
@@ -55,12 +54,17 @@ local function checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemBut
 		end
 	end
 
-	-- questCache: item name found in active quest text (both modes)
-	if addon.questObjectiveText:find(itemName, 1, true) then
-		isQuest = true
+	-- Questie integration (both modes)
+	if addon.questieTooltips then
+		if addon.questieTooltips.GetTooltip("i_" .. itemID) then
+			isQuest = true
+		end
 	end
 
-	addon.questItemCache[itemName] = isQuest
+	-- Cache true results always, only cache false if no Questie (Questie data may not be ready yet)
+	if isQuest or not addon.questieTooltips then
+		addon.questItemCache[itemID] = isQuest
+	end
 	return isQuest
 end
 
@@ -144,7 +148,11 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 		return
 	end
 
-	local itemName, _, itemQuality, _, _, itemType, _, _, _, _, _, itemClassId = GetItemInfo(itemIdOrLink)
+	-- Fast path: GetItemInfoInstant is synchronous and gives us itemID + classID without async loading
+	local itemID, _, _, _, _, itemClassId = C_Item.GetItemInfoInstant(itemIdOrLink)
+	if not itemID then return end
+
+	local itemName, _, itemQuality = GetItemInfo(itemIdOrLink)
 	if not itemQuality then
 		-- Item data not cached yet - wait for it to load, then retry
 		local item = type(itemIdOrLink) == "number"
@@ -161,7 +169,7 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	end
 
 	-- Upgrade quest items to special quality
-	if itemQuality <= QUALITY_COMMON and checkQuestItem(itemName, itemClassId, itemType, bagId, bagItemButtonId) then
+	if itemQuality <= QUALITY_COMMON and checkQuestItem(itemID, itemName, itemClassId, bagId, bagItemButtonId) then
 		itemQuality = QUEST_QUALITY
 	end
 

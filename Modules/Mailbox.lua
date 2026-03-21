@@ -55,21 +55,17 @@ local function updateOpenMailItems()
 	end
 end
 
--- Update colors on mailbox changes - inbox, send form, and sent mail
+-- Update colors on mailbox changes - send form events + inbox/open mail hooks
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("MAIL_SHOW")  				-- Mailbox opened (reliable)
-eventFrame:RegisterEvent("MAIL_INBOX_UPDATE")  		-- Inbox changes
 eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")  	-- Send form updated
 eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")  		-- Mail sent successfully
 
 eventFrame:SetScript("OnEvent", function(_, event)
-	if event == "MAIL_SHOW" then
-		updateSendMailItems()
-	elseif event == "MAIL_INBOX_UPDATE" then
-		updateInboxItems()
-	elseif event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
+	if event == "MAIL_SHOW" or event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
 		updateSendMailItems()
 	end
 end)
 
+hooksecurefunc("InboxFrame_Update", updateInboxItems)  -- Inbox updates + page changes
 hooksecurefunc("OpenMail_Update", updateOpenMailItems)  -- Opened mail updates

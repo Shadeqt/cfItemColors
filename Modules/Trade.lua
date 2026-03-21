@@ -1,5 +1,8 @@
 local addon = cfItemColors
 
+-- Module enable check
+if not cfItemColorsDB[addon.MODULES.TRADE].enabled then return end
+
 -- WoW constants
 local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player
 
@@ -24,9 +27,6 @@ local function updateAllTradeSlots()
 		updateTargetTradeSlot(i)
 	end
 end
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.TRADE].enabled then return end
 
 -- Update trade slot colors on window open and item changes
 local eventFrame = CreateFrame("Frame")

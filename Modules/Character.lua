@@ -18,14 +18,13 @@ local function updateAllEquipmentSlots()
 	end
 end
 
--- Update colors on equipment changes and login
+-- Update colors on equipment changes and when frame is shown
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")  	-- Equipment slot changed
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")  		-- Login initialization
-eventFrame:SetScript("OnEvent", function(_, event, slotId)
-	if event == "PLAYER_EQUIPMENT_CHANGED" then
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+eventFrame:SetScript("OnEvent", function(_, _, slotId)
+	if CharacterFrame:IsShown() then
 		updateSingleEquipmentSlot(slotId)
-	elseif event == "PLAYER_ENTERING_WORLD" then
-		updateAllEquipmentSlots()
 	end
 end)
+
+CharacterFrame:HookScript("OnShow", updateAllEquipmentSlots)
