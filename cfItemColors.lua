@@ -61,8 +61,8 @@ local function checkQuestItem(itemID, itemName, itemClassId, bagId, bagItemButto
 		end
 	end
 
-	-- Cache true results always, only cache false if no Questie (Questie data may not be ready yet)
-	if isQuest or not addon.questieTooltips then
+	-- Don't cache false if activeQuestOnly is ON and Questie isn't ready yet
+	if isQuest or not cfItemColorsDB.activeQuestOnly.enabled then
 		addon.questItemCache[itemID] = isQuest
 	end
 	return isQuest
