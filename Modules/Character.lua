@@ -20,11 +20,14 @@ end
 
 -- Update colors on equipment changes and when frame is shown
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 eventFrame:SetScript("OnEvent", function(_, _, slotId)
-	if CharacterFrame:IsShown() then
-		updateSingleEquipmentSlot(slotId)
-	end
+	updateSingleEquipmentSlot(slotId)
 end)
 
-CharacterFrame:HookScript("OnShow", updateAllEquipmentSlots)
+CharacterFrame:HookScript("OnShow", function()
+	eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+	updateAllEquipmentSlots()
+end)
+CharacterFrame:HookScript("OnHide", function()
+	eventFrame:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
+end)

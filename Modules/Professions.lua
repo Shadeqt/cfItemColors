@@ -41,30 +41,30 @@ local function updateClassTrainerIcon()
 	addon.applyQualityColor(classTrainerIconButton, itemLink)
 end
 
--- Hook TradeSkill UI when loaded
-if C_AddOns.IsAddOnLoaded("Blizzard_TradeSkillUI") then
+-- Hook TradeSkill and Trainer UIs when loaded
+local tradeSkillHooked = C_AddOns.IsAddOnLoaded("Blizzard_TradeSkillUI")
+local trainerHooked = C_AddOns.IsAddOnLoaded("Blizzard_TrainerUI")
+
+if tradeSkillHooked then
 	hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
-else
-	local tsFrame = CreateFrame("Frame")
-	tsFrame:RegisterEvent("ADDON_LOADED")
-	tsFrame:SetScript("OnEvent", function(self, _, addonName)
-		if addonName == "Blizzard_TradeSkillUI" then
-			self:UnregisterEvent("ADDON_LOADED")
-			hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
-		end
-	end)
+end
+if trainerHooked then
+	hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
 end
 
--- Hook Trainer UI when loaded
-if C_AddOns.IsAddOnLoaded("Blizzard_TrainerUI") then
-	hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
-else
-	local trFrame = CreateFrame("Frame")
-	trFrame:RegisterEvent("ADDON_LOADED")
-	trFrame:SetScript("OnEvent", function(self, _, addonName)
-		if addonName == "Blizzard_TrainerUI" then
-			self:UnregisterEvent("ADDON_LOADED")
+if not tradeSkillHooked or not trainerHooked then
+	local loaderFrame = CreateFrame("Frame")
+	loaderFrame:RegisterEvent("ADDON_LOADED")
+	loaderFrame:SetScript("OnEvent", function(self, _, addonName)
+		if not tradeSkillHooked and addonName == "Blizzard_TradeSkillUI" then
+			tradeSkillHooked = true
+			hooksecurefunc("TradeSkillFrame_SetSelection", updateTradeSkillItems)
+		elseif not trainerHooked and addonName == "Blizzard_TrainerUI" then
+			trainerHooked = true
 			hooksecurefunc("ClassTrainerFrame_Update", updateClassTrainerIcon)
+		end
+		if tradeSkillHooked and trainerHooked then
+			self:UnregisterEvent("ADDON_LOADED")
 		end
 	end)
 end

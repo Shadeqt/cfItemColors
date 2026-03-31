@@ -138,7 +138,7 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
 	local itemID, _, _, _, _, itemClassId = C_Item.GetItemInfoInstant(itemIdOrLink)
 	if not itemID then return end
 
-	local itemName, _, itemQuality = GetItemInfo(itemIdOrLink)
+	local itemQuality = C_Item.GetItemQualityByID(itemIdOrLink)
 	if not itemQuality then
 		-- Item data not cached yet - wait for it to load, then retry
 		local item = type(itemIdOrLink) == "number"

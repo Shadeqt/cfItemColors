@@ -39,7 +39,7 @@ local function onEvent(_, event, ...)
 		updateAllInspectSlots()
 	elseif event == "UNIT_INVENTORY_CHANGED" then
 		local unit = ...
-		if InspectFrame and InspectFrame:IsShown() and InspectFrame.unit == unit then
+		if InspectFrame.unit == unit then
 			updateAllInspectSlots()
 		end
 	end
@@ -48,9 +48,14 @@ end
 -- Initialize inspect UI hooks
 local function initInspectHooks()
 	eventFrame:RegisterEvent("INSPECT_READY")
-	eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 	eventFrame:SetScript("OnEvent", onEvent)
-	InspectFrame:HookScript("OnHide", clearAllInspectSlots)
+	InspectFrame:HookScript("OnShow", function()
+		eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+	end)
+	InspectFrame:HookScript("OnHide", function()
+		eventFrame:UnregisterEvent("UNIT_INVENTORY_CHANGED")
+		clearAllInspectSlots()
+	end)
 end
 
 -- Check if Blizzard_InspectUI is already loaded
