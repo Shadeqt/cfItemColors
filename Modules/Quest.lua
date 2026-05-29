@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.QUEST].enabled then return end
+local _, addon = ...
 
 -- Colors reward buttons using the given API functions and button prefix
 local function colorRewardButtons(buttonPrefix, numChoices, numRewards, getItemLink)

@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.TRADE].enabled then return end
+local _, addon = ...
 
 -- WoW constants
 local MAX_TRADE_ITEMS = MAX_TRADE_ITEMS -- 7, trade slots per player

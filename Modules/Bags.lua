@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.BAGS].enabled then return end
+local _, addon = ...
 
 -- WoW constants
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS 		-- 4, player bag slots (excludes backpack slot 0)
@@ -33,10 +30,19 @@ local function updateAllBagColors()
 	end
 end
 
--- Update colors on bag changes and system events
+-- Update colors on bag changes and quest log changes (the latter so existing items
+-- light up gold the moment a relevant quest enters the log, without waiting for a
+-- bag-content event).
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")  -- Bag content changes
+eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+eventFrame:RegisterEvent("QUEST_ACCEPTED")
+eventFrame:RegisterEvent("QUEST_REMOVED")
 eventFrame:SetScript("OnEvent", updateAllBagColors)
 
 hooksecurefunc("ToggleBag", updateSingleBagColors)  -- User clicks bag icons or B keybind
 hooksecurefunc("OpenBag", updateSingleBagColors)  	-- System-opened bags (vendor, mail, bank)
+
+-- Exposed so Questie.lua can force a re-paint after it overrides
+-- addon.isActiveQuestItem; without this, bags already open at that moment keep
+-- the broad (pre-Questie) coloring until next toggle.
+addon.refreshBags = updateAllBagColors

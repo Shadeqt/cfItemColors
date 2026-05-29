@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.MERCHANT].enabled then return end
+local _, addon = ...
 
 -- WoW constants
 local MERCHANT_ITEMS_PER_PAGE = MERCHANT_ITEMS_PER_PAGE -- 10, items displayed per merchant page

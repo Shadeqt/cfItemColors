@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.MAILBOX].enabled then return end
+local _, addon = ...
 
 -- WoW constants
 local INBOXITEMS_TO_DISPLAY = INBOXITEMS_TO_DISPLAY -- 7
@@ -55,17 +52,13 @@ local function updateOpenMailItems()
 	end
 end
 
--- Update colors on mailbox changes - send form events + inbox/open mail hooks
+-- Update send-mail attachments on any of the send-side events (all three trigger
+-- the same refresh).
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("MAIL_SHOW")  				-- Mailbox opened (reliable)
-eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")  	-- Send form updated
-eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")  		-- Mail sent successfully
-
-eventFrame:SetScript("OnEvent", function(_, event)
-	if event == "MAIL_SHOW" or event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" then
-		updateSendMailItems()
-	end
-end)
+eventFrame:RegisterEvent("MAIL_SHOW")
+eventFrame:RegisterEvent("MAIL_SEND_INFO_UPDATE")
+eventFrame:RegisterEvent("MAIL_SEND_SUCCESS")
+eventFrame:SetScript("OnEvent", updateSendMailItems)
 
 hooksecurefunc("InboxFrame_Update", updateInboxItems)  -- Inbox updates + page changes
 hooksecurefunc("OpenMail_Update", updateOpenMailItems)  -- Opened mail updates

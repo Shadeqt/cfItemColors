@@ -1,18 +1,11 @@
 ## Interface: 11508
 ## Title:     cfItemColors
-## Notes:     Adds quality-colored borders to items based on rarity
+## Notes:     Quality-colored borders on item icons across bag/bank/loot/merchant/etc surfaces
 ## Author:    Cowfoot
-## Version:   1.0
-## SavedVariablesPerCharacter: cfItemColorsDB
+## Version:   2.0
 
-# Core modules (load order matters)
-Init.lua
-ModIntegrations\BagAddons_Disable.lua
 Core.lua
-Interface\Widgets.lua
-Interface\Settings.lua
 
-# Domain modules
 Modules\Bags.lua
 Modules\Bank.lua
 Modules\Character.lua
@@ -22,5 +15,6 @@ Modules\Mailbox.lua
 Modules\Merchant.lua
 Modules\Professions.lua
 Modules\Quest.lua
-ModIntegrations\Questie_QuestItems.lua
 Modules\Trade.lua
+
+Questie.lua

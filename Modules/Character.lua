@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.CHARACTER].enabled then return end
+local _, addon = ...
 
 -- Updates a single character equipment slot
 local function updateSingleEquipmentSlot(slotId)

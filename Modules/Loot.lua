@@ -1,7 +1,4 @@
-local addon = cfItemColors
-
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.LOOT].enabled then return end
+local _, addon = ...
 
 -- Updates a single loot slot button
 local function updateLootSlotButton(slotIndex)

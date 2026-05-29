@@ -1,72 +1,38 @@
-local addon = cfItemColors
+local _, addon = ...
 
--- Module enable check
-if not cfItemColorsDB[addon.MODULES.INSPECT].enabled then return end
-
--- Clears borders for all inspect slots
 local function clearAllInspectSlots()
-	for i = 1, #addon.EQUIPMENT_SLOTS do
-		local inspectButton = _G["Inspect" .. addon.EQUIPMENT_SLOTS[i] .. "Slot"]
-		if inspectButton then
-			addon.applyQualityColor(inspectButton, nil)
-		end
-	end
+    for _, slot in ipairs(addon.EQUIPMENT_SLOTS) do
+        local button = _G["Inspect" .. slot .. "Slot"]
+        if button then addon.applyQualityColor(button, nil) end
+    end
 end
 
--- Updates a single inspect slot (applyQualityColor handles async item loading)
-local function updateInspectSlot(slotId)
-	if not InspectFrame or not InspectFrame:IsShown() then return end
-	local unit = InspectFrame.unit
-	local inspectButton = _G["Inspect" .. addon.EQUIPMENT_SLOTS[slotId] .. "Slot"]
-	if not inspectButton then return end
-
-	local itemLink = GetInventoryItemLink(unit, slotId)
-	addon.applyQualityColor(inspectButton, itemLink or GetInventoryItemID(unit, slotId))
-end
-
--- Updates all inspect equipment slots
 local function updateAllInspectSlots()
-	if not InspectFrame or not InspectFrame:IsShown() then return end
-	for i = 1, #addon.EQUIPMENT_SLOTS do
-		updateInspectSlot(i)
-	end
+    if not InspectFrame or not InspectFrame:IsShown() then return end
+    local unit = InspectFrame.unit
+    for i, slot in ipairs(addon.EQUIPMENT_SLOTS) do
+        local button = _G["Inspect" .. slot .. "Slot"]
+        if button then
+            local link = GetInventoryItemLink(unit, i)
+            addon.applyQualityColor(button, link or GetInventoryItemID(unit, i))
+        end
+    end
 end
 
-local eventFrame = CreateFrame("Frame")
+EventUtil.ContinueOnAddOnLoaded("Blizzard_InspectUI", function()
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("INSPECT_READY")
+    eventFrame:SetScript("OnEvent", function(_, event, unit)
+        if event == "INSPECT_READY" or (event == "UNIT_INVENTORY_CHANGED" and InspectFrame.unit == unit) then
+            updateAllInspectSlots()
+        end
+    end)
 
-local function onEvent(_, event, ...)
-	if event == "INSPECT_READY" then
-		updateAllInspectSlots()
-	elseif event == "UNIT_INVENTORY_CHANGED" then
-		local unit = ...
-		if InspectFrame.unit == unit then
-			updateAllInspectSlots()
-		end
-	end
-end
-
--- Initialize inspect UI hooks
-local function initInspectHooks()
-	eventFrame:RegisterEvent("INSPECT_READY")
-	eventFrame:SetScript("OnEvent", onEvent)
-	InspectFrame:HookScript("OnShow", function()
-		eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
-	end)
-	InspectFrame:HookScript("OnHide", function()
-		eventFrame:UnregisterEvent("UNIT_INVENTORY_CHANGED")
-		clearAllInspectSlots()
-	end)
-end
-
--- Check if Blizzard_InspectUI is already loaded
-if C_AddOns.IsAddOnLoaded("Blizzard_InspectUI") then
-	initInspectHooks()
-else
-	eventFrame:RegisterEvent("ADDON_LOADED")
-	eventFrame:SetScript("OnEvent", function(self, _, addonName)
-		if addonName == "Blizzard_InspectUI" then
-			self:UnregisterEvent("ADDON_LOADED")
-			initInspectHooks()
-		end
-	end)
-end
+    InspectFrame:HookScript("OnShow", function()
+        eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+    end)
+    InspectFrame:HookScript("OnHide", function()
+        eventFrame:UnregisterEvent("UNIT_INVENTORY_CHANGED")
+        clearAllInspectSlots()
+    end)
+end)
