@@ -9,9 +9,7 @@ local function init()
     local tooltips = QuestieLoader and QuestieLoader:ImportModule("QuestieTooltips")
     if not tooltips then return end
 
-    addon.isActiveQuestItem = function(bagId, bagItemButtonId)
-        if not (bagId and bagItemButtonId) then return false end
-        local itemID = C_Container.GetContainerItemID(bagId, bagItemButtonId)
+    addon.isActiveQuestItem = function(itemID, isQuestItem)
         return itemID and tooltips.GetTooltip("i_" .. itemID) ~= nil
     end
 

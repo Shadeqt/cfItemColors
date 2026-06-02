@@ -1,8 +1,9 @@
 -- Shared primitives for cfItemColors: quality-color lookup, border + quest-marker
--- drawing, and the public addon.applyQualityColor entry point used by every
--- Modules/* file. The default addon.isActiveQuestItem treats every Blizzard-
--- flagged quest item as active; Questie.lua replaces it with a narrower check
--- (only items in actively tracked quests) when Questie is loaded.
+-- drawing, and the public addon.applyQualityColor / addon.applyQuestMarker entry
+-- points used by every Modules/* file. Each module resolves its own surface's quest
+-- signal (bags/loot from Blizzard's per-slot APIs, turn-in by assertion) and passes
+-- it in; the default addon.isActiveQuestItem simply trusts that flag, while Questie.lua
+-- replaces it with an itemID-keyed check (only items in quests Questie tracks).
 
 local _, addon = ...
 
@@ -27,13 +28,26 @@ local QUALITY_COLORS = setmetatable({
     end,
 })
 
--- Default: every item Blizzard flags as a quest item gets the gold treatment.
--- Questie.lua overrides addon.isActiveQuestItem when Questie is loaded, narrowing
--- the set to items in actively tracked quests.
-function addon.isActiveQuestItem(bagId, bagItemButtonId)
-    if not (bagId and bagItemButtonId) then return false end
-    local info = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-    return info and info.isQuestItem == true
+-- Decides whether an item gets the gold active-quest treatment. The default trusts
+-- the per-surface quest flag the caller resolved from Blizzard's own quest-item APIs
+-- (GetContainerItemQuestInfo for bag/bank slots, GetLootSlotInfo for loot, ...) — that
+-- flag is Blizzard's "objective item for one of your quests" signal and needs no bag
+-- slot. itemID is unused by the default but is the key Questie.lua's override keys on,
+-- narrowing the set to items in quests Questie is currently tracking.
+function addon.isActiveQuestItem(itemID, isQuestItem)
+    return isQuestItem == true
+end
+
+-- Resolves the icon texture a border should anchor to. Most buttons expose it as a
+-- global <name>IconTexture; some use a .Icon/.icon member, and a few (e.g. the
+-- crafted-item icon in the trade-skill window) paint it as the button's NormalTexture.
+local function findIconTexture(button)
+    local buttonName = button:GetName()
+    local named = buttonName and _G[buttonName .. "IconTexture"]
+    if named then return named end
+    if button.Icon then return button.Icon end
+    if button.icon then return button.icon end
+    return button.GetNormalTexture and button:GetNormalTexture()
 end
 
 local function createBorder(button)
@@ -43,10 +57,8 @@ local function createBorder(button)
     border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
     border:SetTexCoord(0.225, 0.775, 0.225, 0.775)
     border:SetBlendMode("ADD")
-    border:SetAlpha(0.8)
 
-    local buttonName = button:GetName()
-    local iconTexture = (buttonName and _G[buttonName .. "IconTexture"]) or button.Icon or button.icon
+    local iconTexture = findIconTexture(button)
     border:SetAllPoints(iconTexture or button)
     border:Hide()
 
@@ -54,12 +66,23 @@ local function createBorder(button)
     return border
 end
 
+-- Equalize perceived border brightness across qualities. Blizzard's quality colors
+-- vary widely in luminance (green/gold glow far brighter than blue under ADD), so
+-- scale each border's alpha inversely to its color luminance, using rare blue's
+-- luminance as the reference (the dimmest border color). Blue lands at full alpha;
+-- every brighter quality (purple/green/gold) is dimmed down to match it.
+local BORDER_TARGET_LUMINANCE = 0.36  -- rare blue
+local function borderAlpha(color)
+    local lum = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b
+    return math.min(BORDER_TARGET_LUMINANCE / lum, 1.0)
+end
+
 local function updateBorder(button, itemQuality)
     if itemQuality and itemQuality >= QUALITY_UNCOMMON then
         local border = createBorder(button)
         local color  = QUALITY_COLORS[itemQuality]
         if not color then return end
-        border:SetVertexColor(color.r, color.g, color.b, 0.6)
+        border:SetVertexColor(color.r, color.g, color.b, borderAlpha(color))
         border:Show()
     elseif button.customBorder then
         button.customBorder:Hide()
@@ -70,18 +93,14 @@ local function hideQuestMarker(button)
     if button.questMarker then button.questMarker:Hide() end
 end
 
-local function applyQuestMarker(button, bagId, bagItemButtonId)
-    if button.beginsQuest == false or not bagId or not bagItemButtonId then
-        hideQuestMarker(button)
-        return
-    end
-
-    local info        = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-    local questId     = info and info.questID
+-- Draws the begins-quest marker (the ! / ? icon) for items that start an
+-- uncompleted quest. Bag/bank-only: the caller passes the ItemQuestInfo it already
+-- fetched for that slot (questID/isActive). Pass nil to just hide the marker.
+function addon.applyQuestMarker(button, questInfo)
+    local questId     = questInfo and questInfo.questID
     local isCompleted = questId and C_QuestLog.IsQuestFlaggedCompleted(questId)
 
     if not questId or isCompleted then
-        button.beginsQuest = false
         hideQuestMarker(button)
         return
     end
@@ -92,19 +111,22 @@ local function applyQuestMarker(button, bagId, bagItemButtonId)
         button.questMarker:SetPoint("BOTTOMRIGHT", -2, 4)
     end
 
-    local texture = info.isActive and "Interface\\GossipFrame\\ActiveQuestIcon"
-                                    or "Interface\\GossipFrame\\AvailableQuestIcon"
+    local texture = questInfo.isActive and "Interface\\GossipFrame\\ActiveQuestIcon"
+                                         or "Interface\\GossipFrame\\AvailableQuestIcon"
     button.questMarker:SetTexture(texture)
-    button.beginsQuest = true
     button.questMarker:Show()
 end
 
-function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
+-- Colors a button's border by item quality. isQuestItem is the caller's resolved
+-- "this is an objective for a quest you're on" flag: bags/loot read it from Blizzard's
+-- per-slot quest APIs, the turn-in panel asserts it, and surfaces with no such signal
+-- pass nothing (Questie's override still recognizes them by itemID). The begins-quest
+-- marker is separate — see addon.applyQuestMarker.
+function addon.applyQualityColor(button, itemIdOrLink, isQuestItem)
     if not button then return end
 
     if not itemIdOrLink then
         updateBorder(button, nil)
-        applyQuestMarker(button, nil, nil)
         return
     end
 
@@ -120,18 +142,16 @@ function addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
         if item and not item:IsItemEmpty() then
             item:ContinueOnItemLoad(function()
                 C_Timer.After(0, function()
-                    addon.applyQualityColor(button, itemIdOrLink, bagId, bagItemButtonId)
+                    addon.applyQualityColor(button, itemIdOrLink, isQuestItem)
                 end)
             end)
         end
         return
     end
 
-    if itemQuality <= QUALITY_COMMON and addon.isActiveQuestItem(bagId, bagItemButtonId) then
+    if itemQuality <= QUALITY_COMMON and addon.isActiveQuestItem(itemID, isQuestItem) then
         itemQuality = QUEST_QUALITY
     end
 
-    button.beginsQuest = nil
     updateBorder(button, itemQuality)
-    applyQuestMarker(button, bagId, bagItemButtonId)
 end

@@ -12,7 +12,9 @@ local function updateSingleBankSlot(slotId)
 	if not bankSlotButton then return end
 
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
-	addon.applyQualityColor(bankSlotButton, containerItemId, BANK_CONTAINER, slotId)
+	local questInfo = C_Container.GetContainerItemQuestInfo(BANK_CONTAINER, slotId)
+	addon.applyQualityColor(bankSlotButton, containerItemId, questInfo and questInfo.isQuestItem == true)
+	addon.applyQuestMarker(bankSlotButton, questInfo)
 end
 
 -- Updates all bank container slots

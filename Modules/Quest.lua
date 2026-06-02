@@ -30,13 +30,17 @@ local function updateQuestLogRewards()
 	colorRewardButtons("QuestLogItem", numChoices, numRewards, getLink)
 end
 
--- Updates quest required item buttons
+-- Updates quest required item buttons. Every item in the progress panel is an
+-- objective for the quest currently being turned in — i.e. a quest you are on — so
+-- we flag them as quest items directly (isQuestItem = true). The default treatment
+-- golds them; under Questie the override re-decides per itemID, narrowing to quests
+-- it tracks. No bag slot is involved.
 local function updateQuestRequiredItems()
 	local numItems = GetNumQuestItems()
 	for i = 1, numItems do
 		local button = _G["QuestProgressItem" .. i]
 		local itemLink = GetQuestItemLink("required", i)
-		addon.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink, true)
 	end
 end
 
