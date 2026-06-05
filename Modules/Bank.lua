@@ -13,7 +13,7 @@ local function updateSingleBankSlot(slotId)
 
 	local containerItemId = C_Container.GetContainerItemID(BANK_CONTAINER, slotId)
 	local questInfo = C_Container.GetContainerItemQuestInfo(BANK_CONTAINER, slotId)
-	addon.applyQualityColor(bankSlotButton, containerItemId, questInfo and questInfo.isQuestItem == true)
+	addon.applyQualityColor(bankSlotButton, containerItemId, questInfo and questInfo.isQuestItem == true, addon.beginsUncompletedQuest(questInfo))
 	addon.applyQuestMarker(bankSlotButton, questInfo)
 end
 

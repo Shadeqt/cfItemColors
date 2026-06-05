@@ -93,14 +93,20 @@ local function hideQuestMarker(button)
     if button.questMarker then button.questMarker:Hide() end
 end
 
+-- True when the slot's item begins a quest you haven't completed yet. This is the
+-- single source of truth shared by the begins-quest marker and the gold border, so
+-- the two always agree: any item showing the ! / ? icon also gets the gold border.
+-- Bag/bank-only — questInfo comes from C_Container.GetContainerItemQuestInfo.
+function addon.beginsUncompletedQuest(questInfo)
+    local questId = questInfo and questInfo.questID
+    return (questId and not C_QuestLog.IsQuestFlaggedCompleted(questId)) or false
+end
+
 -- Draws the begins-quest marker (the ! / ? icon) for items that start an
 -- uncompleted quest. Bag/bank-only: the caller passes the ItemQuestInfo it already
 -- fetched for that slot (questID/isActive). Pass nil to just hide the marker.
 function addon.applyQuestMarker(button, questInfo)
-    local questId     = questInfo and questInfo.questID
-    local isCompleted = questId and C_QuestLog.IsQuestFlaggedCompleted(questId)
-
-    if not questId or isCompleted then
+    if not addon.beginsUncompletedQuest(questInfo) then
         hideQuestMarker(button)
         return
     end
@@ -120,9 +126,11 @@ end
 -- Colors a button's border by item quality. isQuestItem is the caller's resolved
 -- "this is an objective for a quest you're on" flag: bags/loot read it from Blizzard's
 -- per-slot quest APIs, the turn-in panel asserts it, and surfaces with no such signal
--- pass nothing (Questie's override still recognizes them by itemID). The begins-quest
--- marker is separate — see addon.applyQuestMarker.
-function addon.applyQualityColor(button, itemIdOrLink, isQuestItem)
+-- pass nothing (Questie's override still recognizes them by itemID). beginsQuest is the
+-- bag/bank caller's "this item starts an uncompleted quest" flag (see
+-- addon.beginsUncompletedQuest) — it golds quest-starter items so their border matches
+-- the begins-quest marker. Both signals only upgrade common/poor items to gold.
+function addon.applyQualityColor(button, itemIdOrLink, isQuestItem, beginsQuest)
     if not button then return end
 
     if not itemIdOrLink then
@@ -142,14 +150,14 @@ function addon.applyQualityColor(button, itemIdOrLink, isQuestItem)
         if item and not item:IsItemEmpty() then
             item:ContinueOnItemLoad(function()
                 C_Timer.After(0, function()
-                    addon.applyQualityColor(button, itemIdOrLink, isQuestItem)
+                    addon.applyQualityColor(button, itemIdOrLink, isQuestItem, beginsQuest)
                 end)
             end)
         end
         return
     end
 
-    if itemQuality <= QUALITY_COMMON and addon.isActiveQuestItem(itemID, isQuestItem) then
+    if itemQuality <= QUALITY_COMMON and (addon.isActiveQuestItem(itemID, isQuestItem) or beginsQuest) then
         itemQuality = QUEST_QUALITY
     end
 

@@ -19,7 +19,7 @@ local function updateSingleBagColors(bagId)
 			local bagItemButtonId = bagItemButton:GetID()
 			local containerItemId = C_Container.GetContainerItemID(bagId, bagItemButtonId)
 			local questInfo = C_Container.GetContainerItemQuestInfo(bagId, bagItemButtonId)
-			addon.applyQualityColor(bagItemButton, containerItemId, questInfo and questInfo.isQuestItem == true)
+			addon.applyQualityColor(bagItemButton, containerItemId, questInfo and questInfo.isQuestItem == true, addon.beginsUncompletedQuest(questInfo))
 			addon.applyQuestMarker(bagItemButton, questInfo)
 		end
 	end
