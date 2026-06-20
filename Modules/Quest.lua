@@ -1,5 +1,15 @@
 local _, addon = ...
 
+local QUEST_ITEM_CLASS = Enum.ItemClass.Questitem  -- 12; the tooltip's "Quest Item" class
+
+-- True when the link points to a Quest-class item. Force-golds reward/provided items in a
+-- quest-offer dialog (e.g. "you will receive this letter"): the quest isn't in your log yet, so
+-- neither Blizzard's per-slot flag nor Questie can vouch for it — the item's own class is the
+-- only reliable signal there, needing no quest data, log entry, or GetQuestID.
+local function isQuestItemLink(itemLink)
+	return itemLink and select(6, C_Item.GetItemInfoInstant(itemLink)) == QUEST_ITEM_CLASS
+end
+
 -- Colors reward buttons using the given API functions and button prefix
 local function colorRewardButtons(buttonPrefix, numChoices, numRewards, getItemLink)
 	for i = 1, numChoices + numRewards do
@@ -10,7 +20,7 @@ local function colorRewardButtons(buttonPrefix, numChoices, numRewards, getItemL
 		else
 			itemLink = getItemLink("reward", i - numChoices)
 		end
-		addon.applyQualityColor(button, itemLink)
+		addon.applyQualityColor(button, itemLink, nil, isQuestItemLink(itemLink))
 	end
 end
 

@@ -123,14 +123,16 @@ function addon.applyQuestMarker(button, questInfo)
     button.questMarker:Show()
 end
 
--- Colors a button's border by item quality. isQuestItem is the caller's resolved
--- "this is an objective for a quest you're on" flag: bags/loot read it from Blizzard's
--- per-slot quest APIs, the turn-in panel asserts it, and surfaces with no such signal
--- pass nothing (Questie's override still recognizes them by itemID). beginsQuest is the
--- bag/bank caller's "this item starts an uncompleted quest" flag (see
--- addon.beginsUncompletedQuest) — it golds quest-starter items so their border matches
--- the begins-quest marker. Both signals only upgrade common/poor items to gold.
-function addon.applyQualityColor(button, itemIdOrLink, isQuestItem, beginsQuest)
+-- Colors a button's border by item quality. isQuestItem is the caller's resolved "this is an
+-- objective for a quest you're on" flag: bags/loot read it from Blizzard's per-slot quest APIs,
+-- the turn-in panel asserts it, and surfaces with no such signal pass nothing (Questie's
+-- override still recognizes them by itemID). forceQuestColor lets a caller gold an item it has
+-- positively identified as a quest item by means OUTSIDE isActiveQuestItem — bypassing the
+-- (Questie) narrowing: bags pass "this item starts an uncompleted quest" (addon.beginsUncompletedQuest,
+-- matching the begins-quest marker), and the quest-offer dialog passes "this reward/provided
+-- item has the Quest item class" (so it golds before the quest is in your log). All signals
+-- only upgrade common/poor items to gold.
+function addon.applyQualityColor(button, itemIdOrLink, isQuestItem, forceQuestColor)
     if not button then return end
 
     if not itemIdOrLink then
@@ -150,14 +152,14 @@ function addon.applyQualityColor(button, itemIdOrLink, isQuestItem, beginsQuest)
         if item and not item:IsItemEmpty() then
             item:ContinueOnItemLoad(function()
                 C_Timer.After(0, function()
-                    addon.applyQualityColor(button, itemIdOrLink, isQuestItem, beginsQuest)
+                    addon.applyQualityColor(button, itemIdOrLink, isQuestItem, forceQuestColor)
                 end)
             end)
         end
         return
     end
 
-    if itemQuality <= QUALITY_COMMON and (addon.isActiveQuestItem(itemID, isQuestItem) or beginsQuest) then
+    if itemQuality <= QUALITY_COMMON and (forceQuestColor or addon.isActiveQuestItem(itemID, isQuestItem)) then
         itemQuality = QUEST_QUALITY
     end
 
